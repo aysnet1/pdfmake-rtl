@@ -4,6 +4,12 @@ var fonts = {
 		bold: 'examples/fonts/Nillima.ttf',
 		italics: 'examples/fonts/Nillima.ttf',
 		bolditalics: 'examples/fonts/Nillima.ttf'
+	},
+	Roboto: {
+		normal: 'examples/fonts/Roboto-Regular.ttf',
+		bold: 'examples/fonts/Roboto-Medium.ttf',
+		italics: 'examples/fonts/Roboto-Italic.ttf',
+		bolditalics: 'examples/fonts/Roboto-MediumItalic.ttf'
 	}
 };
 
@@ -79,7 +85,7 @@ var docDefinition = {
 					['1', '2', '3']
 				]
 			},
-			supportRTL: true,
+			// supportRTL: true,
 			margin: [0, 0, 0, 20]
 		}
 	],

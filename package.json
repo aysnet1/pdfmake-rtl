@@ -1,6 +1,6 @@
 {
   "name": "pdfmake-rtl",
-  "version": "1.3.3",
+  "version": "1.3.4",
   "description": "Enhanced PDFMake with automatic RTL (Arabic/Persian/Urdu) support - Complete standalone package (beta)",
   "main": "index.js",
   "browser": "build/pdfmake.js",

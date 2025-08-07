@@ -66,7 +66,8 @@ const docDefinition = {
           ['الاسم الأول', 'الاسم الأخير', 'العمر'],
           ['أحمد', 'محمد', '٢٥'],
           ['فاطمة', 'علي', '٣٠']
-        ]
+        ],
+  // supportRTL:true,
       }
     }
   ]
@@ -76,6 +77,9 @@ const pdfDoc = printer.createPdfKitDocument(docDefinition);
 pdfDoc.pipe(fs.createWriteStream('document.pdf'));
 pdfDoc.end();
 ```
+ ### Note :
+ If the table body row contains complex content such as an array of text objects, set `supportRTL: true` at the table  to ensure correct RTL handling.
+
 ## 💻 Client-Side Usage
 
 ### Browser Integration

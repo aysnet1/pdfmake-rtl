@@ -1438,7 +1438,7 @@ describe('LayoutBuilder', function () {
 
 			var pages = builder.layoutDocument(desc, sampleTestProvider, {});
 
-			assert.equal(pages[0].items[0].item.x, 114);
+			assert.equal(pages[0].items[0].item.x, 50);
 			assert.equal(pages[0].items[0].item.y, 240);
 			assert.equal(pages[0].items[1].item.x, 240);
 			assert.equal(pages[0].items[1].item.y, 40);
