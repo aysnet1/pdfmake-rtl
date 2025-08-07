@@ -390,28 +390,13 @@ function processAutoRTLTable(tableNode) {
 		if (Array.isArray(row)) {
 			row.forEach(function (cell) {
 				totalCells++;
-				var cellText = '';
-
-				if (typeof cell === 'string') {
-					cellText = cell;
-				} else if (cell && cell.text) {
-					if (typeof cell.text === 'string') {
-						cellText = cell.text;
-					} else if (Array.isArray(cell.text)) {
-						// Handle array of text objects
-						cellText = cell.text.map(function (textObj) {
-							return typeof textObj === 'string' ? textObj : (textObj && textObj.text ? textObj.text : '');
-						}).join('');
-					}
-				}
-
+				var cellText = typeof cell === 'string' ? cell : (cell && cell.text ? cell.text : '');
 				if (containsRTL(cellText)) {
 					rtlCellCount++;
 				}
 			});
 		}
 	});
-
 
 	// If more than 30% of cells contain RTL content, treat as RTL table
 	hasRTLContent = totalCells > 0 && (rtlCellCount / totalCells) >= 0.3;
