@@ -1,7 +1,7 @@
 # pdfmake-RTL [![Node.js CI][githubactions_img]][githubactions_url] [![GitHub][github_img]][github_url] [![npm][npm_img]][npm_url] [![CDNJS][cdnjs_img]][cndjs_url]
 
-[githubactions_img]: https://github.com/bpampuch/pdfmake-rtl/actions/workflows/node.js.yml/badge.svg?branch=master
-[githubactions_url]: https://github.com/bpampuch/pdfmake-rtl/actions
+[githubactions_img]: https://github.com/aysnet1/pdfmake-rtl/actions/workflows/node.js.yml/badge.svg?branch=master
+[githubactions_url]: https://github.com/aysnet1/pdfmake-rtl/actions
 
 [github_img]: https://img.shields.io/github/release/aysnet1/pdfmake-rtl.svg?colorB=0E7FBF
 [github_url]: https://github.com/bpampuch/pdfmake-rtl/releases/latest
