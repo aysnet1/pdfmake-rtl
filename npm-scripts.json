@@ -1,0 +1,9 @@
+{
+  "scripts": {
+    "test": "node test-package.js",
+    "prepublishOnly": "npm run test && echo 'Package ready for publishing'",
+    "build": "npm run build:vfs && npm run build:examples",
+    "build:vfs": "node build-vfs.js",
+    "build:examples": "node build-examples.js"
+  }
+}

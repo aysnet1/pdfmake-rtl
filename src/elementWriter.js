@@ -5,6 +5,7 @@ var isNumber = require('./helpers').isNumber;
 var pack = require('./helpers').pack;
 var offsetVector = require('./helpers').offsetVector;
 var DocumentContext = require('./documentContext');
+const rtlUtils = require('./rtlUtils');
 
 /**
  * Creates an instance of ElementWriter - a line/vector writer, which adds
@@ -250,16 +251,17 @@ ElementWriter.prototype.adjustRTLInlines = function (line, availableWidth) {
 	// and recalculate their positions from right to left
 	var rtlInlines = [];
 	var ltrInlines = [];
-	var neutralInlines = [];
+	
 
 	// Separate RTL, LTR, and neutral inlines
 	line.inlines.forEach(function(inline) {
-		if (inline.isRTL || inline.direction === 'rtl') {
+		var hasNumbers = /\d/.test(inline.text);
+		var hasSpecialChars = /[-+*\/=<>()[\]{}.,;:!?'"@#$%^&_~`|\\]/.test(inline.text);
+		var isNeutralContent = hasNumbers || hasSpecialChars;
+		if (inline.isRTL || inline.direction !== 'ltr' || isNeutralContent) {
 			rtlInlines.push(inline);
 		} else if (inline.direction === 'ltr') {
 			ltrInlines.push(inline);
-		} else {
-			neutralInlines.push(inline);
 		}
 	});
 
@@ -274,20 +276,17 @@ ElementWriter.prototype.adjustRTLInlines = function (line, availableWidth) {
 
 		// Add LTR inlines first (if any)
 		ltrInlines.forEach(function(inline) {
+
 			inline.x = currentX;
 			currentX += inline.width;
 			reorderedInlines.push(inline);
 		});
 
-		// Add neutral inlines
-		neutralInlines.forEach(function(inline) {
-			inline.x = currentX;
-			currentX += inline.width;
-			reorderedInlines.push(inline);
-		});
+		
 
 		// Add RTL inlines (already reversed)
 		rtlInlines.forEach(function(inline) {
+			inline.text = rtlUtils.fixArabicTextUsingReplace(inline.text);
 			inline.x = currentX;
 			currentX += inline.width;
 			reorderedInlines.push(inline);

@@ -87,6 +87,15 @@ DocPreprocessor.prototype.preprocessVerticalContainer = function (node) {
 DocPreprocessor.prototype.preprocessList = function (node) {
 	var items = node.ul || node.ol;
 
+	// Apply automatic RTL detection to list items
+	if (node.ul) {
+		node.ul = rtlUtils.processRTLList(node.ul);
+		items = node.ul;
+	} else if (node.ol) {
+		node.ol = rtlUtils.processRTLList(node.ol);
+		items = node.ol;
+	}
+
 	for (var i = 0, l = items.length; i < l; i++) {
 		items[i] = this.preprocessNode(items[i]);
 	}
@@ -97,9 +106,11 @@ DocPreprocessor.prototype.preprocessList = function (node) {
 DocPreprocessor.prototype.preprocessTable = function (node) {
 	var col, row, cols, rows;
 
-	// Apply RTL processing before preprocessing individual cells
+	// Apply automatic RTL detection and processing
 	if (node.supportRTL) {
-		node = rtlUtils.processRTLTable(node);
+	node = rtlUtils.processRTLTable(node);
+	} else {
+		node = rtlUtils.processAutoRTLTable(node);
 	}
 
 	for (col = 0, cols = node.table.body[0].length; col < cols; col++) {
@@ -111,14 +122,8 @@ DocPreprocessor.prototype.preprocessTable = function (node) {
 					data = '';
 				}
 				if (!data._span) {
-					// Add supportRTL to cells in RTL tables
-					if (node.supportRTL) {
-						if (isString(data)) {
-							data = { text: data, supportRTL: true };
-						} else if (data && data.text && !data.hasOwnProperty('supportRTL')) {
-							data.supportRTL = true;
-						}
-					}
+					// Apply automatic RTL detection to cell content
+					data = rtlUtils.autoApplyRTL(data);
 					rowData[col] = this.preprocessNode(data);
 				}
 			}
@@ -129,6 +134,9 @@ DocPreprocessor.prototype.preprocessTable = function (node) {
 };
 
 DocPreprocessor.prototype.preprocessText = function (node) {
+	// Apply automatic RTL detection to text elements
+	node = rtlUtils.autoApplyRTL(node);
+
 	if (node.tocItem) {
 		if (!isArray(node.tocItem)) {
 			node.tocItem = [node.tocItem];

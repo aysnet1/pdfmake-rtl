@@ -320,7 +320,6 @@ function measure(fontProvider, textArray, styleContextStack) {
 		var sub = getStyleProperty(item, styleContextStack, 'sub', false);
 		
 		// RTL Support
-		var supportRTL = getStyleProperty(item, styleContextStack, 'supportRTL', false);
 		var direction = getStyleProperty(item, styleContextStack, 'direction', null);
 
 		if ((sup || sub) && item.fontSize === undefined) {
@@ -332,11 +331,11 @@ function measure(fontProvider, textArray, styleContextStack) {
 
 		// Process RTL text if needed
 		var originalText = item.text;
-		var rtlResult = rtlUtils.processRTLText(originalText, supportRTL, direction);
+		var rtlResult = rtlUtils.processRTLText(originalText, direction);
 		item.text = rtlResult.text;
 		item.isRTL = rtlResult.isRTL;
 		item.direction = rtlResult.isRTL ? 'rtl' : 'ltr';
-		item.supportRTL = supportRTL;
+	
 
 		item.width = widthOfString(item.text, font, fontSize, characterSpacing, fontFeatures);
 		item.height = font.lineHeight(fontSize) * lineHeight;

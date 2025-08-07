@@ -1,0 +1,534 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PDFMake RTL - Client Side Example</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            direction: ltr;
+        }
+        
+        .container {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+        
+        .panel {
+            border: 1px solid #ddd;
+            padding: 15px;
+            border-radius: 8px;
+            background: #f9f9f9;
+        }
+        
+        .panel h3 {
+            margin-top: 0;
+            color: #333;
+        }
+        
+        .rtl-preview {
+            direction: rtl;
+            text-align: right;
+            background: #e8f4f8;
+            padding: 10px;
+            border-radius: 4px;
+            margin: 10px 0;
+        }
+        
+        .ltr-preview {
+            direction: ltr;
+            text-align: left;
+            background: #f0f8e8;
+            padding: 10px;
+            border-radius: 4px;
+            margin: 10px 0;
+        }
+        
+        button {
+            background: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        
+        button:hover {
+            background: #0056b3;
+        }
+        
+        .output {
+            background: #f8f9fa;
+            border: 1px solid #dee2e6;
+            padding: 15px;
+            border-radius: 4px;
+            margin-top: 20px;
+            font-family: monospace;
+            white-space: pre-wrap;
+        }
+        
+        .demo-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 10px 0;
+        }
+        
+        .demo-table th, .demo-table td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: center;
+        }
+        
+        .demo-table th {
+            background-color: #f2f2f2;
+        }
+        
+        .arabic-table {
+            direction: rtl;
+        }
+        
+        .status {
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 4px;
+        }
+        
+        .status.success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        
+        .status.error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+    </style>
+</head>
+<body>
+    <h1>PDFMake RTL - Client Side Example</h1>
+    <p>This example demonstrates how to use PDFMake with automatic RTL support in the browser.</p>
+    
+    <div class="container">
+        <!-- Text Examples -->
+        <div class="panel">
+            <h3>📝 Text Direction Detection</h3>
+            <p>Test automatic RTL/LTR detection:</p>
+            
+            <div class="ltr-preview">
+                <strong>English (LTR):</strong><br>
+                This text should appear left-to-right automatically
+            </div>
+            
+            <div class="rtl-preview">
+                <strong>العربية (RTL):</strong><br>
+                هذا النص يجب أن يظهر من اليمين إلى اليسار تلقائياً
+            </div>
+            
+            <div class="rtl-preview">
+                <strong>עברית (RTL):</strong><br>
+                הטקסט הזה צריך להופיע מימין לשמאל אוטומטית
+            </div>
+            
+            <button onclick="generateTextPDF()">Generate Text PDF</button>
+        </div>
+        
+        <!-- Table Examples -->
+        <div class="panel">
+            <h3>📊 RTL Table Examples</h3>
+            <p>Tables with automatic column reversal:</p>
+            
+            <p><strong>Arabic Table (columns will be reversed in PDF):</strong></p>
+            <table class="demo-table arabic-table">
+                <tr>
+                    <th>العمر</th>
+                    <th>الاسم الأخير</th>
+                    <th>الاسم الأول</th>
+                </tr>
+                <tr>
+                    <td>٢٥</td>
+                    <td>محمد</td>
+                    <td>أحمد</td>
+                </tr>
+                <tr>
+                    <td>٣٠</td>
+                    <td>علي</td>
+                    <td>فاطمة</td>
+                </tr>
+            </table>
+            
+            <p><strong>English Table (normal order):</strong></p>
+            <table class="demo-table">
+                <tr>
+                    <th>First Name</th>
+                    <th>Last Name</th>
+                    <th>Age</th>
+                </tr>
+                <tr>
+                    <td>John</td>
+                    <td>Doe</td>
+                    <td>25</td>
+                </tr>
+                <tr>
+                    <td>Jane</td>
+                    <td>Smith</td>
+                    <td>30</td>
+                </tr>
+            </table>
+            
+            <button onclick="generateTablePDF()">Generate Table PDF</button>
+        </div>
+    </div>
+    
+    <!-- Mixed Content Example -->
+    <div class="panel">
+        <h3>🌍 Mixed Language Content</h3>
+        <p>Documents with mixed RTL/LTR content:</p>
+        
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+            <div>
+                <h4>Source Content:</h4>
+                <ul>
+                    <li>English title</li>
+                    <li>عنوان عربي</li>
+                    <li>כותרת עברית</li>
+                    <li>Mixed content: Hello مرحبا سلام اردو</li>
+                </ul>
+            </div>
+            <div>
+                <h4>Expected PDF Result:</h4>
+                <ul>
+                    <li>✓ English: left-aligned, Roboto font</li>
+                    <li>✓ Arabic: right-aligned, Arabic font</li>
+                    <li>✓ Persian/Urdu: right-aligned, appropriate fonts</li>
+                    <li>✓ Mixed: intelligent handling</li>
+                </ul>
+            </div>
+        </div>
+        
+        <button onclick="generateMixedPDF()">Generate Mixed Content PDF</button>
+    </div>
+    
+    <!-- RTL Utils Demo -->
+    <div class="panel">
+        <h3>🔧 RTL Utils API Demo</h3>
+        <p>Test the RTL detection utilities:</p>
+        
+        <div style="margin: 10px 0;">
+            <input type="text" id="testText" placeholder="Enter text to test..." 
+                   style="width: 70%; padding: 8px; margin-right: 10px;">
+            <button onclick="testRTLDetection()">Test Detection</button>
+        </div>
+        
+        <div id="detectionResults" class="output" style="min-height: 100px;">
+            Enter some text above to test RTL detection...
+        </div>
+    </div>
+    
+    <!-- Status and Output -->
+    <div id="status" class="status" style="display: none;"></div>
+    <div id="output" class="output" style="display: none;"></div>
+    
+    <!-- Include PDFMake and fonts -->
+    <script src="build/pdfmake.min.js"></script>
+    <script src="build/vfs_fonts.js"></script>
+    
+    <script>
+        // Initialize PDFMake with RTL support
+        console.log('Initializing PDFMake with RTL support...');
+        
+        // Check if PDFMake is loaded
+        if (typeof pdfMake === 'undefined') {
+            showStatus('Error: PDFMake not loaded. Make sure build files are available.', 'error');
+        } else {
+            showStatus('PDFMake RTL ready!', 'success');
+        }
+        
+        // RTL Utils (simplified client-side version)
+        const RTLUtils = {
+            // RTL character detection
+            isRTLChar(char) {
+                const code = char.charCodeAt(0);
+                return (code >= 0x0600 && code <= 0x06FF) ||  // Arabic
+                       (code >= 0x06A9 && code <= 0x06AF) ||  // Persian
+                       (code >= 0x06C0 && code <= 0x06C3) ||  // Persian Extended
+                       (code >= 0x0679 && code <= 0x0679) ||  // Urdu Tteh
+                       (code >= 0x067E && code <= 0x067E) ||  // Urdu Peh
+                       (code >= 0x0686 && code <= 0x0686) ||  // Urdu Tcheh
+                       (code >= 0x0750 && code <= 0x077F) ||  // Arabic Supplement
+                       (code >= 0xFE70 && code <= 0xFEFF);    // Arabic Presentation Forms
+            },
+            
+            // Text direction detection
+            getTextDirection(text) {
+                if (!text) return 'neutral';
+                
+                let rtlCount = 0;
+                let ltrCount = 0;
+                
+                for (let i = 0; i < text.length; i++) {
+                    const char = text.charAt(i);
+                    if (this.isRTLChar(char)) {
+                        rtlCount++;
+                    } else if (/[A-Za-z]/.test(char)) {
+                        ltrCount++;
+                    }
+                }
+                
+                if (rtlCount > ltrCount) return 'rtl';
+                if (ltrCount > rtlCount) return 'ltr';
+                return rtlCount > 0 ? 'rtl' : 'neutral';
+            },
+            
+            // Check if text contains RTL characters
+            containsRTL(text) {
+                if (!text) return false;
+                return text.split('').some(char => this.isRTLChar(char));
+            },
+            
+            // Check if text is primarily Arabic
+            isArabicText(text) {
+                if (!text) return false;
+                const arabicChars = text.split('').filter(char => {
+                    const code = char.charCodeAt(0);
+                    return (code >= 0x0600 && code <= 0x06FF) || 
+                           (code >= 0x0750 && code <= 0x077F);
+                });
+                return arabicChars.length > text.length * 0.3;
+            }
+        };
+        
+        // PDF Generation Functions
+        function generateTextPDF() {
+            showStatus('Generating text PDF...', 'success');
+            
+            const docDefinition = {
+                content: [
+                    { text: 'RTL Text Detection Demo', style: 'header' },
+                    { text: '\n' },
+                    
+                    { text: 'English Text (LTR):', style: 'subheader' },
+                    { text: 'This English text should appear left-to-right with Roboto font.', margin: [0, 5, 0, 10] },
+                    
+                    { text: 'Arabic Text (RTL):', style: 'subheader' },
+                    { text: 'هذا النص العربي يجب أن يظهر من اليمين إلى اليسار تلقائياً مع الخط العربي المناسب.', margin: [0, 5, 0, 10] },
+                    
+                    { text: 'Persian/Urdu Text (RTL):', style: 'subheader' },
+                    { text: 'הטקסט העברי הזה צריך להופיע מימין לשמאל אוטומטית עם הגופן המתאים.', margin: [0, 5, 0, 10] },
+                    
+                    { text: 'Mixed Content:', style: 'subheader' },
+                    { text: 'Mixed text: Hello مرحبا سلام World دنیا عالم!', margin: [0, 5, 0, 10] }
+                ],
+                styles: {
+                    header: { fontSize: 18, bold: true, alignment: 'center', margin: [0, 0, 0, 10] },
+                    subheader: { fontSize: 14, bold: true, margin: [0, 10, 0, 5] }
+                }
+            };
+            
+            pdfMake.createPdf(docDefinition).download('rtl-text-demo.pdf');
+            showOutput('Text PDF generated and downloaded!');
+        }
+        
+        function generateTablePDF() {
+            showStatus('Generating table PDF...', 'success');
+            
+            const docDefinition = {
+                content: [
+                    { text: 'RTL Table Demo', style: 'header' },
+                    { text: '\n' },
+                    
+                    { text: 'Arabic Table (columns automatically reversed):', style: 'subheader' },
+                    {
+                        table: {
+                            headerRows: 1,
+                            widths: ['*', '*', '*'],
+                            body: [
+                                ['الاسم الأول', 'الاسم الأخير', 'العمر'],
+                                ['أحمد', 'محمد', '٢٥'],
+                                ['فاطمة', 'علي', '٣٠'],
+                                ['يوسف', 'حسن', '٢٨']
+                            ]
+                        },
+                        layout: 'lightHorizontalLines',
+                        margin: [0, 10, 0, 20]
+                    },
+                    
+                    { text: 'English Table (normal order):', style: 'subheader' },
+                    {
+                        table: {
+                            headerRows: 1,
+                            widths: ['*', '*', '*'],
+                            body: [
+                                ['First Name', 'Last Name', 'Age'],
+                                ['John', 'Doe', '25'],
+                                ['Jane', 'Smith', '30'],
+                                ['Bob', 'Johnson', '28']
+                            ]
+                        },
+                        layout: 'lightHorizontalLines',
+                        margin: [0, 10, 0, 20]
+                    }
+                ],
+                styles: {
+                    header: { fontSize: 18, bold: true, alignment: 'center' },
+                    subheader: { fontSize: 14, bold: true, margin: [0, 10, 0, 5] }
+                }
+            };
+            
+            pdfMake.createPdf(docDefinition).download('rtl-table-demo.pdf');
+            showOutput('Table PDF generated and downloaded!');
+        }
+        
+        function generateMixedPDF() {
+            showStatus('Generating mixed content PDF...', 'success');
+            
+            const docDefinition = {
+                content: [
+                    { text: 'Mixed RTL/LTR Content Demo', style: 'header' },
+                    { text: '\n' },
+                    
+                    // Mixed list
+                    { text: 'Mixed Language List:', style: 'subheader' },
+                    {
+                        ul: [
+                            'English list item',
+                            'عنصر قائمة عربي',
+                            'פריט רשימה עברי',
+                            'Mixed item: Hello مرحبا سلام اردو'
+                        ],
+                        margin: [0, 5, 0, 15]
+                    },
+                    
+                    // Mixed table
+                    { text: 'Mixed Language Table:', style: 'subheader' },
+                    {
+                        table: {
+                            headerRows: 1,
+                            widths: ['*', '*', '*', '*'],
+                            body: [
+                                ['Name', 'الاسم', 'שם', 'Score'],
+                                ['Ahmed', 'أحمد', 'אחמד', '95'],
+                                ['Sarah', 'سارة', 'שרה', '87'],
+                                ['David', 'داود', 'דוד', '92']
+                            ]
+                        },
+                        layout: 'lightHorizontalLines',
+                        margin: [0, 10]
+                    },
+                    
+                    // Columns with different directions
+                    { text: 'Side-by-side Content:', style: 'subheader' },
+                    {
+                        columns: [
+                            {
+                                width: '50%',
+                                text: [
+                                    { text: 'English Column:\n', bold: true },
+                                    'This is left-to-right text in English. ',
+                                    'It should be aligned to the left and use Latin fonts.'
+                                ]
+                            },
+                            {
+                                width: '50%',
+                                text: [
+                                    { text: 'العمود العربي:\n', bold: true },
+                                    'هذا نص من اليمين إلى اليسار باللغة العربية. ',
+                                    'يجب أن يكون محاذياً إلى اليمين ويستخدم الخطوط العربية.'
+                                ]
+                            }
+                        ],
+                        margin: [0, 10]
+                    }
+                ],
+                styles: {
+                    header: { fontSize: 18, bold: true, alignment: 'center' },
+                    subheader: { fontSize: 14, bold: true, margin: [0, 10, 0, 5] }
+                }
+            };
+            
+            pdfMake.createPdf(docDefinition).download('rtl-mixed-demo.pdf');
+            showOutput('Mixed content PDF generated and downloaded!');
+        }
+        
+        function testRTLDetection() {
+            const text = document.getElementById('testText').value;
+            if (!text) {
+                showOutput('Please enter some text to test.');
+                return;
+            }
+            
+            const results = {
+                'Input Text': `"${text}"`,
+                'Text Direction': RTLUtils.getTextDirection(text),
+                'Contains RTL': RTLUtils.containsRTL(text),
+                'Is Arabic Text': RTLUtils.isArabicText(text),
+                'Character Analysis': ''
+            };
+            
+            // Character-by-character analysis
+            const charAnalysis = [];
+            for (let i = 0; i < text.length; i++) {
+                const char = text.charAt(i);
+                const isRTL = RTLUtils.isRTLChar(char);
+                charAnalysis.push(`'${char}' (${isRTL ? 'RTL' : 'LTR/Neutral'})`);
+            }
+            results['Character Analysis'] = charAnalysis.join(', ');
+            
+            // Display results
+            let output = 'RTL Detection Results:\n';
+            for (const [key, value] of Object.entries(results)) {
+                output += `${key}: ${value}\n`;
+            }
+            
+            document.getElementById('detectionResults').textContent = output;
+        }
+        
+        function showStatus(message, type = 'success') {
+            const statusEl = document.getElementById('status');
+            statusEl.textContent = message;
+            statusEl.className = `status ${type}`;
+            statusEl.style.display = 'block';
+            
+            if (type === 'success') {
+                setTimeout(() => {
+                    statusEl.style.display = 'none';
+                }, 3000);
+            }
+        }
+        
+        function showOutput(message) {
+            const outputEl = document.getElementById('output');
+            outputEl.textContent = message;
+            outputEl.style.display = 'block';
+            
+            setTimeout(() => {
+                outputEl.style.display = 'none';
+            }, 5000);
+        }
+        
+        // Test some sample texts on load
+        window.addEventListener('load', function() {
+            const sampleTexts = [
+                'Hello World',
+                'مرحبا بالعالم',
+                'سلام دنیا',
+                'اردو میں سلام',
+                'Mixed: Hello مرحبا'
+            ];
+            
+            console.log('RTL Detection Tests:');
+            sampleTexts.forEach(text => {
+                console.log(`"${text}": direction=${RTLUtils.getTextDirection(text)}, hasRTL=${RTLUtils.containsRTL(text)}`);
+            });
+        });
+    </script>
+</body>
+</html>

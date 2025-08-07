@@ -13,3 +13,28 @@ webpack-standardfonts.config.js
 .editorconfig
 eslint.config.mjs
 build-examples.js
+
+# RTL development files
+pure-auto-rtl.js
+pure-auto-rtl.pdf
+test-auto-rtl.js
+test-auto-rtl.pdf
+rtl-demo.js
+rtl-demo.pdf
+style-test.js
+style-test.pdf
+debug-rtl.js
+setup-rtl.sh
+rtl-config.json
+
+# Additional documentation
+ARCHITECTURE-RTL.md
+PACKAGE-SUMMARY.md
+README-RTL.md
+STYLES-RTL.md
+STYLES-SUMMARY.md
+
+# Development files
+test-package.js
+usage-example.js
+npm-scripts.json

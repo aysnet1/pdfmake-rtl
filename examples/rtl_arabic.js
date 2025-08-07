@@ -46,10 +46,10 @@ var docDefinition = {
 		// Mixed text with explicit direction
 		{
 			text: [
-				{ text: 'English text first, then ', supportRTL: false },
-				{ text: 'النص العربي الثاني', supportRTL: true, direction: 'rtl' },
-				{ text: ' and English again.', supportRTL: false }
-			],
+				` 1 ) هذا النص عدد 404 لتربه ان كان ضحيحا 100 %
+ 2  تهتيهتهثي ثيياثعايثي ثيعاعي .
+5 ثيثعايثعياثيثغيث – ؤعاعاثعليغثليغثليظ : ىعياغيلغثيل
+`],
 			margin: [0, 0, 0, 10]
 		},
 		
