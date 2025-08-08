@@ -107,11 +107,9 @@ DocPreprocessor.prototype.preprocessTable = function (node) {
 	var col, row, cols, rows;
 
 	// Apply automatic RTL detection and processing
-	if (node.supportRTL) {
-	node = rtlUtils.processRTLTable(node);
-	} else {
-		node = rtlUtils.processAutoRTLTable(node);
-	}
+
+	node = rtlUtils.processAutoRTLTable(node);
+
 
 	for (col = 0, cols = node.table.body[0].length; col < cols; col++) {
 		for (row = 0, rows = node.table.body.length; row < rows; row++) {

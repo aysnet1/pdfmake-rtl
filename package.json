@@ -1,6 +1,6 @@
 {
   "name": "pdfmake-rtl",
-  "version": "1.3.5",
+  "version": "1.3.6",
   "description": "Enhanced PDFMake with automatic RTL (Arabic/Persian/Urdu) support - Complete standalone package (beta)",
   "main": "index.js",
   "browser": "build/pdfmake.js",
@@ -62,7 +62,8 @@
     "build:examples": "node build-examples.js",
     "lint": "eslint \"./src/**/*.js\" \"./tests/**/*.js\" \"./examples/**/*.js\"",
     "mocha": "mocha --reporter spec \"./tests/**/*.js\"",
-    "playground": "node dev-playground/server.js"
+    "playground": "node dev-playground/server.js",
+    "example:rtl-nested-header": "node examples/rtl-nested-header.js"
   },
   "repository": {
     "type": "git",
@@ -120,5 +121,6 @@
         "tests"
       ]
     }
-  }
+  },
+  "packageManager": "yarn@1.22.22+sha512.a6b2f7906b721bba3d67d4aff083df04dad64c399707841b7acf00f6b133b7ac24255f2652fa22ae3534329dc6180534e98d17432037ff6fd140556e2bb3137e"
 }
