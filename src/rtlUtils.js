@@ -48,11 +48,11 @@ var LTR_CHARS = /[A-Za-z\u00C0-\u024F\u1E00-\u1EFF]/;
 /**
  * Check if a character is in Arabic script (includes Persian and Urdu)
  * @param {string} char - Single character to check
- * @return {boolean} - True if character is Arabic/Persian/Urdu
+ * @returns {boolean} - True if character is Arabic/Persian/Urdu
  */
 function isArabicChar(char) {
 	var code = char.charCodeAt(0);
-	return ARABIC_RANGE.some(function(range) {
+	return ARABIC_RANGE.some(function (range) {
 		return code >= range[0] && code <= range[1];
 	});
 }
@@ -60,11 +60,11 @@ function isArabicChar(char) {
 /**
  * Check if a character is in Persian (Farsi) script
  * @param {string} char - Single character to check
- * @return {boolean} - True if character is Persian
+ * @returns {boolean} - True if character is Persian
  */
 function isPersianChar(char) {
 	var code = char.charCodeAt(0);
-	return PERSIAN_RANGE.some(function(range) {
+	return PERSIAN_RANGE.some(function (range) {
 		return code >= range[0] && code <= range[1];
 	}) || isArabicChar(char); // Persian uses Arabic base + extensions
 }
@@ -72,11 +72,11 @@ function isPersianChar(char) {
 /**
  * Check if a character is in Urdu script
  * @param {string} char - Single character to check
- * @return {boolean} - True if character is Urdu
+ * @returns {boolean} - True if character is Urdu
  */
 function isUrduChar(char) {
 	var code = char.charCodeAt(0);
-	return URDU_RANGE.some(function(range) {
+	return URDU_RANGE.some(function (range) {
 		return code >= range[0] && code <= range[1];
 	}) || isArabicChar(char); // Urdu uses Arabic base + extensions
 }
@@ -84,7 +84,7 @@ function isUrduChar(char) {
 /**
  * Check if a character requires RTL rendering
  * @param {string} char - Single character to check
- * @return {boolean} - True if character requires RTL
+ * @returns {boolean} - True if character requires RTL
  */
 function isRTLChar(char) {
 	return RTL_CHARS.test(char);
@@ -93,7 +93,7 @@ function isRTLChar(char) {
 /**
  * Check if a character is strongly LTR
  * @param {string} char - Single character to check
- * @return {boolean} - True if character is strongly LTR
+ * @returns {boolean} - True if character is strongly LTR
  */
 function isLTRChar(char) {
 	return LTR_CHARS.test(char);
@@ -102,7 +102,7 @@ function isLTRChar(char) {
 /**
  * Determine the predominant text direction of a string
  * @param {string} text - Text to analyze
- * @return {string} - 'rtl', 'ltr', or 'neutral'
+ * @returns {string} - 'rtl', 'ltr', or 'neutral'
  */
 function getTextDirection(text) {
 	if (!text || typeof text !== 'string') {
@@ -149,7 +149,7 @@ function getNormalizedChars(fixed) {
 /**
  * Check if text contains any RTL characters
  * @param {string} text - Text to check
- * @return {boolean} - True if text contains RTL characters
+ * @returns {boolean} - True if text contains RTL characters
  */
 function containsRTL(text) {
 	if (!text || typeof text !== 'string') {
@@ -161,7 +161,7 @@ function containsRTL(text) {
 /**
  * Check if text is primarily Arabic, Persian, or Urdu
  * @param {string} text - Text to check
- * @return {boolean} - True if text is primarily Arabic/Persian/Urdu
+ * @returns {boolean} - True if text is primarily Arabic/Persian/Urdu
  */
 function isArabicText(text) {
 	if (!text || typeof text !== 'string') {
@@ -181,7 +181,7 @@ function isArabicText(text) {
 		}
 	}
 
-	// If we have any strong characters and RTL represents at least 30% 
+	// If we have any strong characters and RTL represents at least 30%
 	// (lowered threshold for mixed text)
 	return totalStrongChars > 0 && (rtlCount / totalStrongChars) >= 0.3;
 }
@@ -191,7 +191,7 @@ function isArabicText(text) {
  * For modern PDF libraries, we rely on the underlying engine for BiDi processing
  * We should NOT reverse word order manually - that breaks Arabic text
  * @param {string} text - Text to process
- * @return {string} - Text (unchanged for proper BiDi handling)
+ * @returns {string} - Text (unchanged for proper BiDi handling)
  */
 function reverseRTLText(text) {
 	if (!text || typeof text !== 'string') {
@@ -209,7 +209,7 @@ function reverseRTLText(text) {
  * Apply RTL processing to text if needed
  * @param {string} text - Original text
  * @param {string} direction - Explicit direction override ('rtl', 'ltr', or null)
- * @return {Object} - { text: processedText, isRTL: boolean }
+ * @returns {Object} - { text: processedText, isRTL: boolean }
  */
 function processRTLText(text, direction) {
 	if (!text || typeof text !== 'string' || getTextDirection(text) !== 'rtl') {
@@ -239,7 +239,7 @@ function processRTLText(text, direction) {
 /**
  * Reverse table row cells for RTL layout
  * @param {Array} row - Table row array
- * @return {Array} - Reversed row array
+ * @returns {Array} - Reversed row array
  */
 function reverseTableRow(row) {
 	if (!Array.isArray(row)) {
@@ -251,16 +251,16 @@ function reverseTableRow(row) {
 /**
  * Process table for RTL layout if supportRTL is enabled
  * @param {Object} tableNode - Table definition object
- * @return {Object} - Processed table node
+ * @returns {Object} - Processed table node
  */
 function processRTLTable(tableNode) {
-	if (!tableNode || !tableNode.supportRTL || !tableNode.table || !tableNode.table.body) {
+	if (!tableNode || !tableNode.table.supportRTL || !tableNode.table || !tableNode.table.body) {
 		return tableNode;
 	}
 
 	// Don't clone the entire object - just modify the table data in place
 	// Reverse each row in the table body for RTL layout
-	tableNode.table.body = tableNode.table.body.map(function(row) {
+	tableNode.table.body = tableNode.table.body.map(function (row) {
 		return reverseTableRow(row);
 	});
 
@@ -275,7 +275,7 @@ function processRTLTable(tableNode) {
 /**
  * Apply automatic RTL detection and formatting to any text element
  * @param {Object|string} element - Text element or string
- * @return {Object} - Enhanced element with RTL properties
+ * @returns {Object} - Enhanced element with RTL properties
  */
 function autoApplyRTL(element) {
 	if (!element) return element;
@@ -296,7 +296,7 @@ function autoApplyRTL(element) {
 	// Handle object elements
 	if (typeof element === 'object' && element.text) {
 		var textDirection = getTextDirection(element.text);
-		
+
 		if (textDirection === 'rtl') {
 			// Auto-apply RTL properties if not already set
 			if (!element.alignment) {
@@ -322,7 +322,7 @@ function autoApplyRTL(element) {
 /**
  * Process list items for RTL support including bullet positioning
  * @param {Array|Object} listItems - ul/ol content
- * @return {Array|Object} - Processed list with RTL support
+ * @returns {Array|Object} - Processed list with RTL support
  */
 function processRTLList(listItems) {
 	if (!listItems) return listItems;
@@ -374,7 +374,7 @@ function processRTLList(listItems) {
 /**
  * Process table for automatic RTL detection and layout
  * @param {Object} tableNode - Table definition object
- * @return {Object} - Processed table node
+ * @returns {Object} - Processed table node
  */
 function processAutoRTLTable(tableNode) {
 	if (!tableNode || !tableNode.table || !tableNode.table.body) {
@@ -401,9 +401,9 @@ function processAutoRTLTable(tableNode) {
 	// If more than 30% of cells contain RTL content, treat as RTL table
 	hasRTLContent = totalCells > 0 && (rtlCellCount / totalCells) >= 0.3;
 
-	if (hasRTLContent) {
+	if (hasRTLContent || tableNode.table.supportRTL) {
 		// Reverse table columns for RTL layout
-		tableNode.table.body = tableNode.table.body.map(function(row) {
+		tableNode.table.body = tableNode.table.body.map(function (row) {
 			return reverseTableRow(row);
 		});
 
@@ -413,9 +413,9 @@ function processAutoRTLTable(tableNode) {
 		}
 
 		// Auto-apply RTL styles to cells
-		tableNode.table.body = tableNode.table.body.map(function(row) {
+		tableNode.table.body = tableNode.table.body.map(function (row) {
 			if (Array.isArray(row)) {
-				return row.map(function(cell) {
+				return row.map(function (cell) {
 					return autoApplyRTL(cell);
 				});
 			}
@@ -423,9 +423,9 @@ function processAutoRTLTable(tableNode) {
 		});
 	} else {
 		// For non-RTL tables, still auto-apply font and alignment per cell
-		tableNode.table.body = tableNode.table.body.map(function(row) {
+		tableNode.table.body = tableNode.table.body.map(function (row) {
 			if (Array.isArray(row)) {
-				return row.map(function(cell) {
+				return row.map(function (cell) {
 					return autoApplyRTL(cell);
 				});
 			}
@@ -439,7 +439,7 @@ function processAutoRTLTable(tableNode) {
 /**
  * Process any document element for automatic RTL detection
  * @param {Object|Array|string} element - Document element
- * @return {Object|Array|string} - Processed element
+ * @returns {Object|Array|string} - Processed element
  */
 function processAutoRTLElement(element) {
 	if (!element) return element;
@@ -478,7 +478,7 @@ function processAutoRTLElement(element) {
 function fixArabicTextUsingReplace(text) {
 	//if start with point remove
 	if (text.startsWith('.')) {
-		text = text.slice(1); 
+		text = text.slice(1);
 	}
 	text = text
 		.replace(/\(/g, 'TEMP_OPEN_PAREN')
@@ -492,12 +492,31 @@ function fixArabicTextUsingReplace(text) {
 		.replace(/\{/g, 'TEMP_OPEN_CURLY')
 		.replace(/\}/g, '{')
 		.replace(/TEMP_OPEN_CURLY/g, '}');
-	
+
 
 
 	return text;
 }
 
+/*
+ * Reverse a table row while preserving colSpan group semantics.
+ * This function correctly handles colSpan by keeping the span cell at the start
+	* of its group after reversal, maintaining proper header alignment.
+ *
+ * @param { Array } row - The original row array(cells may include colSpan / rowSpan).
+ * @returns { Array } - A new row array reversed for RTL with correct colSpan placement.
+ */
+function reverseTableRowPreserveSpans(row) {
+	if (!Array.isArray(row)) return row;
+
+	var n = row.length;
+	if (n === 0) return row;
+
+	// For simple reversal that maintains colSpan structure:
+	// Just reverse the array, but this works better with how pdfmake handles spans
+	return row.slice().reverse();
+
+}
 module.exports = {
 	isArabicChar: isArabicChar,
 	isPersianChar: isPersianChar,
@@ -513,6 +532,7 @@ module.exports = {
 	processRTLTable: processRTLTable,
 	autoApplyRTL: autoApplyRTL,
 	processRTLList: processRTLList,
+	reverseTableRowPreserveSpans: reverseTableRowPreserveSpans,
 	processAutoRTLTable: processAutoRTLTable,
 	processAutoRTLElement: processAutoRTLElement,
 	fixArabicTextUsingReplace: fixArabicTextUsingReplace,

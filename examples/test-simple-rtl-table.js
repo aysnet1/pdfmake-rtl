@@ -1,0 +1,56 @@
+var PdfPrinter = require('../src/printer');
+var fs = require('fs');
+
+var fonts = {
+	Roboto: {
+		normal: 'examples/fonts/Roboto-Regular.ttf',
+		bold: 'examples/fonts/Roboto-Medium.ttf',
+		italics: 'examples/fonts/Roboto-Italic.ttf',
+		bolditalics: 'examples/fonts/Roboto-MediumItalic.ttf'
+	},
+	Nillima: {
+		normal: 'examples/fonts/Nillima.ttf',
+		bold: 'examples/fonts/Nillima.ttf',
+		italics: 'examples/fonts/Nillima.ttf',
+		bolditalics: 'examples/fonts/Nillima.ttf'
+	}
+};
+
+var printer = new PdfPrinter(fonts);
+
+// Simple table without colSpan/rowSpan to test basic RTL
+const docDefinition = {
+	content: [
+		{
+			table: {
+				supportRTL: false, // Explicitly disable RTL table reversal
+				headerRows: 1,
+				widths: ['auto', '*', '*', '*', 'auto'],
+				body: [
+					// Simple header row
+					[
+						{ text: 'رقم', style: 'tableHeader', alignment: 'center' },
+						{ text: 'الاسم', style: 'tableHeader', alignment: 'center' },
+						{ text: 'اللقب', style: 'tableHeader', alignment: 'center' },
+						{ text: 'المستوى', style: 'tableHeader', alignment: 'center' },
+						{ text: 'المعدل', style: 'tableHeader', alignment: 'center' }
+					],
+					// Data rows
+					['1', 'أحمد', 'بن سالم', 'ثانوي', '15.2'],
+					['2', 'سارة', 'محمد', 'إعدادي', '14.5'],
+					['3', 'خالد', 'علي', 'جامعي', '16.0']
+				]
+			}
+		}
+	],
+	styles: {
+		tableHeader: { bold: true, fontSize: 12, color: 'black' }
+	},
+	defaultStyle: { font: 'Nillima' }
+};
+
+var pdfDoc = printer.createPdfKitDocument(docDefinition);
+pdfDoc.pipe(fs.createWriteStream('examples/pdfs/test-simple-rtl-table.pdf'));
+pdfDoc.end();
+
+console.log('Written examples/pdfs/test-simple-rtl-table.pdf');
