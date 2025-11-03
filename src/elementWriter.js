@@ -268,7 +268,7 @@ ElementWriter.prototype.adjustRTLInlines = function (line, availableWidth) {
 	// If we have RTL inlines, reverse their order and recalculate positions
 	if (rtlInlines.length > 0) {
 		// Reverse the order of RTL inlines for proper display
-		rtlInlines.reverse();
+		rtlInlines = reverseWords(rtlInlines);
 
 		// Recalculate x positions from right to left
 		var currentX = 0;
@@ -296,6 +296,57 @@ ElementWriter.prototype.adjustRTLInlines = function (line, availableWidth) {
 		line.inlines = reorderedInlines;
 	}
 };
+
+function reverseWords(words) {
+	let reversed = [];
+	let i = words.length - 1;
+
+	const bracketPairs = {
+		">": "<",
+		"]": "[",
+		"}": "{",
+		")": "(",
+	};
+
+	while (i >= 0) {
+		const word = words[i];
+
+		const closingBracket = word.text.match(/[>\])}]/);
+		let wordHasRtl = true;
+
+		if (word && typeof word.text === "string")
+			wordHasRtl = rtlUtils.containsRTL(word.text);
+
+		if (!wordHasRtl && closingBracket) {
+			const openingBracket = bracketPairs[closingBracket[0]];
+
+			const group = [word];
+			let openFound = false;
+
+			if (!word.text.includes(openingBracket)) {
+				// Scan backward to find the matching opening bracket
+				for (let j = i - 1; j >= 0; j--) {
+					group.unshift(words[j]);
+					if (words[j].text.match(/[<\[\(\{]/)) {
+						openFound = true;
+						i = j - 1; // move index past the group
+						break;
+					}
+				}
+			}
+
+			reversed.push(...group);
+			if (!openFound) i--; // fallback if no opening bracket found
+			continue;
+		}
+
+		// Regular word, just push
+		reversed.push(word);
+		i--;
+	}
+
+	return reversed;
+}
 
 function cloneLine(line) {
 	var result = new Line(line.maxWidth);
