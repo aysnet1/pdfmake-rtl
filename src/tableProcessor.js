@@ -443,23 +443,23 @@ TableProcessor.prototype.endRow = function (rowIndex, writer, pageBreaks) {
 			var leftCellBorder = false;
 			var rightCellBorder = false;
 			var colIndex = xs[i].index;
-
+			let cell = null;
 			// current cell
 			if (colIndex < body[rowIndex].length) {
-				var cell = body[rowIndex][colIndex];
+				cell = body[rowIndex][colIndex];
 				leftCellBorder = cell.border ? cell.border[0] : this.layout.defaultBorder;
 				rightCellBorder = cell.border ? cell.border[2] : this.layout.defaultBorder;
 			}
 
 			// before cell
 			if (colIndex > 0 && !leftCellBorder) {
-				var cell = body[rowIndex][colIndex - 1];
+				cell = body[rowIndex][colIndex - 1];
 				leftCellBorder = cell.border ? cell.border[2] : this.layout.defaultBorder;
 			}
 
 			// after cell
 			if (colIndex + 1 < body[rowIndex].length && !rightCellBorder) {
-				var cell = body[rowIndex][colIndex + 1];
+				cell = body[rowIndex][colIndex + 1];
 				rightCellBorder = cell.border ? cell.border[0] : this.layout.defaultBorder;
 			}
 
@@ -543,8 +543,8 @@ TableProcessor.prototype.endRow = function (rowIndex, writer, pageBreaks) {
 			}
 			// fix rowSpans
 			if (row[i].rowSpan && row[i].rowSpan > 1) {
-				for (var j = 1; j < row[i].rowSpan; j++) {
-					this.tableNode.table.body[rowIndex + j][i]._rowSpanCurrentOffset = j;
+				for (var b = 1; b < row[i].rowSpan; b++) {
+					this.tableNode.table.body[rowIndex + b][i]._rowSpanCurrentOffset = b;
 				}
 			}
 		}

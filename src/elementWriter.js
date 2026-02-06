@@ -10,6 +10,8 @@ const rtlUtils = require('./rtlUtils');
 /**
  * Creates an instance of ElementWriter - a line/vector writer, which adds
  * elements to current page and sets their positions based on the context
+ * @param context
+ * @param tracker
  */
 function ElementWriter(context, tracker) {
 	this.context = context;
@@ -61,14 +63,14 @@ ElementWriter.prototype.alignLine = function (line) {
 	var isRTL = line.isRTL && line.isRTL();
 
 	var offset = 0;
-	
+
 	// For RTL lines, we need special handling
 	if (isRTL) {
 		// If it's RTL and no explicit alignment, default to right
 		if (!alignment || alignment === 'left') {
 			alignment = 'right';
 		}
-		
+
 		// For RTL, we need to reverse the order of inlines and adjust their positions
 		this.adjustRTLInlines(line, width);
 	}
@@ -251,17 +253,37 @@ ElementWriter.prototype.adjustRTLInlines = function (line, availableWidth) {
 	// and recalculate their positions from right to left
 	var rtlInlines = [];
 	var ltrInlines = [];
-	
 
-	// Separate RTL, LTR, and neutral inlines
-	line.inlines.forEach(function(inline) {
-		var hasNumbers = /\d/.test(inline.text);
-		var hasSpecialChars = /[-+*\/=<>()[\]{}.,;:!?'"@#$%^&_~`|\\]/.test(inline.text);
-		var isNeutralContent = hasNumbers || hasSpecialChars;
-		if (inline.isRTL || inline.direction !== 'ltr' || isNeutralContent) {
-			rtlInlines.push(inline);
-		} else if (inline.direction === 'ltr') {
+
+	// Separate RTL, LTR, and neutral inlines using Sticky Direction
+	// Neutrals (numbers, punctuation) adopt the direction of the preceding strong characters.
+	var LTR_REGEX = /[A-Za-z\u00C0-\u024F\u1E00-\u1EFF]/;
+	var currentDir = 'rtl'; // Default to line's direction (since this is adjustRTLInlines)
+
+	line.inlines.forEach(function (inline) {
+		var hasStrongLTR = LTR_REGEX.test(inline.text);
+		var hasStrongRTL = rtlUtils.containsRTL(inline.text);
+
+		// First check the inline's own strong directionality
+		if (hasStrongLTR && !hasStrongRTL) {
+			// Pure LTR inline
+			currentDir = 'ltr';
 			ltrInlines.push(inline);
+		} else if (hasStrongRTL && !hasStrongLTR) {
+			// Pure RTL inline
+			currentDir = 'rtl';
+			rtlInlines.push(inline);
+		} else if (hasStrongLTR && hasStrongRTL) {
+			// Mixed inline - treat as RTL since we're in an RTL line
+			currentDir = 'rtl';
+			rtlInlines.push(inline);
+		} else {
+			// Neutral inline - adopt the direction of preceding content
+			if (currentDir === 'ltr') {
+				ltrInlines.push(inline);
+			} else {
+				rtlInlines.push(inline);
+			}
 		}
 	});
 
@@ -275,28 +297,90 @@ ElementWriter.prototype.adjustRTLInlines = function (line, availableWidth) {
 		var reorderedInlines = [];
 
 		// Add LTR inlines first (if any)
-		ltrInlines.forEach(function(inline) {
+		ltrInlines.forEach(function (inline) {
 
 			inline.x = currentX;
 			currentX += inline.width;
 			reorderedInlines.push(inline);
 		});
 
-		
+
 
 		// Add RTL inlines (already reversed)
-		rtlInlines.forEach(function(inline) {
-			inline.text = rtlUtils.fixArabicTextUsingReplace(inline.text);
+		var NUMBER_PUNCTUATION_REGEX = /^(\d+)([.:\/\-)(]+)(\s*)$/;
+
+		rtlInlines.forEach(function (inline) {
+			// Only apply bracket mirroring if the inline actually contains RTL characters.
+			// Mixed language inlines like "(Complete)" should not have their brackets flipped.
+			if (rtlUtils.containsRTL(inline.text)) {
+				inline.text = rtlUtils.fixArabicTextUsingReplace(inline.text);
+			}
+
+			// Fix for "3." rendering as ".3" in RTL context.
+			// Reorder to Space-Punct-Number ($3$2$1) for correct RTL visual order.
+			// Add explicit space ' ' to ensure separation.
+			if (NUMBER_PUNCTUATION_REGEX.test(inline.text)) {
+				inline.text = inline.text.replace(NUMBER_PUNCTUATION_REGEX, ' ' + '$3$2$1');
+			}
+
 			inline.x = currentX;
 			currentX += inline.width;
 			reorderedInlines.push(inline);
 		});
-
 		// Replace the line's inlines with the reordered ones
 		line.inlines = reorderedInlines;
 	}
 };
+function reverseWords(words) {
+	let reversed = [];
+	let i = words.length - 1;
 
+	const bracketPairs = {
+		">": "<",
+		"]": "[",
+		"}": "{",
+		")": "(",
+	};
+
+	while (i >= 0) {
+		const word = words[i];
+
+		const closingBracket = word.text.match(/[>\])}]/);
+		let wordHasRtl = true;
+
+		if (word && typeof word.text === "string")
+			wordHasRtl = rtlUtils.containsRTL(word.text);
+
+		if (!wordHasRtl && closingBracket) {
+			const openingBracket = bracketPairs[closingBracket[0]];
+
+			const group = [word];
+			let openFound = false;
+
+			if (!word.text.includes(openingBracket)) {
+				// Scan backward to find the matching opening bracket
+				for (let j = i - 1; j >= 0; j--) {
+					group.unshift(words[j]);
+					if (words[j].text.match(/[<\[\(\{]/)) {
+						openFound = true;
+						i = j - 1; // move index past the group
+						break;
+					}
+				}
+			}
+
+			reversed.push(...group);
+			if (!openFound) i--; // fallback if no opening bracket found
+			continue;
+		}
+
+		// Regular word, just push
+		reversed.push(word);
+		i--;
+	}
+
+	return reversed;
+}
 function cloneLine(line) {
 	var result = new Line(line.maxWidth);
 
@@ -383,6 +467,8 @@ ElementWriter.prototype.addFragment = function (block, useBlockXOffset, useBlock
  * pushContext(context) - pushes the provided context and makes it current
  * pushContext(width, height) - creates and pushes a new context with the specified width and height
  * pushContext() - creates a new context for unbreakable blocks (with current availableWidth and full-page-height)
+ * @param contextOrWidth
+ * @param height
  */
 ElementWriter.prototype.pushContext = function (contextOrWidth, height) {
 	if (contextOrWidth === undefined) {

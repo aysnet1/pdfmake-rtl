@@ -3,9 +3,10 @@
 /**
  * Creates an instance of Line
  *
- * @constructor
+ * @class
+ * @param maxWidth
  * @this {Line}
- * @param {Number} Maximum width this line can have
+ * @param {number} Maximum width this line can have
  */
 function Line(maxWidth) {
 	this.maxWidth = maxWidth;
@@ -78,7 +79,7 @@ Line.prototype.getAvailableWidth = function () {
 
 /**
  * Returns line height
- * @return {Number}
+ * @returns {number}
  */
 Line.prototype.getHeight = function () {
 	var max = 0;
@@ -92,7 +93,7 @@ Line.prototype.getHeight = function () {
 
 /**
  * Check if this line should be rendered RTL
- * @return {Boolean}
+ * @returns {boolean}
  */
 Line.prototype.isRTL = function () {
 	// Check if any inline in this line is marked as RTL

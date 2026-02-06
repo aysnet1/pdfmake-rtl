@@ -31,8 +31,10 @@ function addAll(target, otherArray) {
  * Creates an instance of LayoutBuilder - layout engine which turns document-definition-object
  * into a set of pages, lines, inlines and vectors ready to be rendered into a PDF
  *
- * @param {Object} pageSize - an object defining page width and height
- * @param {Object} pageMargins - an object defining top, left, right and bottom margins
+ * @param {object} pageSize - an object defining page width and height
+ * @param {object} pageMargins - an object defining top, left, right and bottom margins
+ * @param imageMeasure
+ * @param svgMeasure
  */
 function LayoutBuilder(pageSize, pageMargins, imageMeasure, svgMeasure) {
 	this.pageSize = pageSize;
@@ -52,11 +54,17 @@ LayoutBuilder.prototype.registerTableLayouts = function (tableLayouts) {
  * Executes layout engine on document-definition-object and creates an array of pages
  * containing positioned Blocks, Lines and inlines
  *
- * @param {Object} docStructure document-definition-object
- * @param {Object} fontProvider font provider
- * @param {Object} styleDictionary dictionary with style definitions
- * @param {Object} defaultStyle default style definition
- * @return {Array} an array of pages
+ * @param {object} docStructure document-definition-object
+ * @param {object} fontProvider font provider
+ * @param {object} styleDictionary dictionary with style definitions
+ * @param {object} defaultStyle default style definition
+ * @param background
+ * @param header
+ * @param footer
+ * @param images
+ * @param watermark
+ * @param pageBreakBeforeFct
+ * @returns {Array} an array of pages
  */
 LayoutBuilder.prototype.layoutDocument = function (docStructure, fontProvider, styleDictionary, defaultStyle, background, header, footer, images, watermark, pageBreakBeforeFct) {
 
@@ -108,9 +116,9 @@ LayoutBuilder.prototype.layoutDocument = function (docStructure, fontProvider, s
 					}
 				}
 				if (pageBreakBeforeFct.length > 3) {
-					for (var ii = 0; ii < index; ii++) {
-						if (linearNodeList[ii].nodeInfo.pageNumbers.indexOf(pageNumber) > -1) {
-							previousNodesOnPage.push(linearNodeList[ii].nodeInfo);
+					for (var k = 0; k < index; k++) {
+						if (linearNodeList[k].nodeInfo.pageNumbers.indexOf(pageNumber) > -1) {
+							previousNodesOnPage.push(linearNodeList[k].nodeInfo);
 						}
 					}
 				}
@@ -143,7 +151,7 @@ LayoutBuilder.prototype.layoutDocument = function (docStructure, fontProvider, s
 	return result.pages;
 };
 
-LayoutBuilder.prototype.tryLayoutDocument = function (docStructure, fontProvider, styleDictionary, defaultStyle, background, header, footer, images, watermark, pageBreakBeforeFct) {
+LayoutBuilder.prototype.tryLayoutDocument = function (docStructure, fontProvider, styleDictionary, defaultStyle, background, header, footer, images, watermark) {
 
 	this.linearNodeList = [];
 	docStructure = this.docPreprocessor.preprocessDocument(docStructure);
@@ -417,7 +425,7 @@ LayoutBuilder.prototype.processNode = function (node) {
 		} else if (node.qr) {
 			self.processQr(node);
 		} else if (!node._span) {
-			throw 'Unrecognized document structure: ' + JSON.stringify(node, fontStringify);
+			throw new Error('Unrecognized document structure: ' + JSON.stringify(node, fontStringify));
 		}
 
 		if (absPosition || relPosition) {
@@ -873,18 +881,30 @@ LayoutBuilder.prototype.processList = function (orderedList, node) {
 		items = orderedList ? node.ol : node.ul,
 		gapSize = node._gapSize;
 
-	this.writer.context().addMargin(gapSize.width);
-
 	var nextMarker;
+	var isNextRTL = false;
+
 	this.tracker.auto('lineAdded', addMarkerToFirstLeaf, function () {
 		items.forEach(function (item) {
 			nextMarker = item.listMarker;
+			isNextRTL = item.alignment === 'right' || (item.isRTL === true);
+
+			if (isNextRTL) {
+				self.writer.context().addMargin(0, gapSize.width);
+			} else {
+				self.writer.context().addMargin(gapSize.width);
+			}
+
 			self.processNode(item);
 			addAll(node.positions, item.positions);
+
+			if (isNextRTL) {
+				self.writer.context().addMargin(0, -gapSize.width);
+			} else {
+				self.writer.context().addMargin(-gapSize.width);
+			}
 		});
 	});
-
-	this.writer.context().addMargin(-gapSize.width);
 
 	function addMarkerToFirstLeaf(line) {
 		// I'm not very happy with the way list processing is implemented
@@ -896,12 +916,27 @@ LayoutBuilder.prototype.processList = function (orderedList, node) {
 			if (marker.canvas) {
 				var vector = marker.canvas[0];
 
-				offsetVector(vector, -marker._minWidth, 0);
+				if (isNextRTL) {
+					// Position marker on the right side
+					offsetVector(vector, self.writer.context().availableWidth, 0);
+				} else {
+					// Position marker on the left side
+					offsetVector(vector, -marker._minWidth, 0);
+				}
+
 				self.writer.addVector(vector);
 			} else if (marker._inlines) {
 				var markerLine = new Line(self.pageSize.width);
 				markerLine.addInline(marker._inlines[0]);
-				markerLine.x = -marker._minWidth;
+
+				if (isNextRTL) {
+					// Position marker on the right side
+					markerLine.x = self.writer.context().availableWidth;
+				} else {
+					// Position marker on the left side
+					markerLine.x = -marker._minWidth;
+				}
+
 				markerLine.y = line.getAscenderHeight() - markerLine.getAscenderHeight();
 				self.writer.addLine(markerLine, true);
 			}
@@ -1080,7 +1115,7 @@ LayoutBuilder.prototype.buildNextLine = function (textNode) {
 
 		if (!inline.noWrap && inline.text.length > 1 && inline.width > line.getAvailableWidth()) {
 			var maxChars = findMaxFitLength(inline.text, line.getAvailableWidth(), function (txt) {
-				return textTools.widthOfString(txt, inline.font, inline.fontSize, inline.characterSpacing, inline.fontFeatures)
+				return textTools.widthOfString(txt, inline.font, inline.fontSize, inline.characterSpacing, inline.fontFeatures);
 			});
 			if (maxChars < inline.text.length) {
 				var newInline = cloneInline(inline);

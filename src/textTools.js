@@ -14,7 +14,7 @@ var TRAILING = /(\s)+$/g;
 /**
  * Creates an instance of TextTools - text measurement utility
  *
- * @constructor
+ * @class
  * @param {FontProvider} fontProvider
  */
 function TextTools(fontProvider) {
@@ -25,9 +25,9 @@ function TextTools(fontProvider) {
  * Converts an array of strings (or inline-definition-objects) into a collection
  * of inlines and calculated minWidth/maxWidth.
  * and their min/max widths
- * @param  {Object} textArray - an array of inline-definition-objects (or strings)
- * @param  {Object} styleContextStack current style stack
- * @return {Object}                   collection of inlines, minWidth, maxWidth
+ * @param  {object} textArray - an array of inline-definition-objects (or strings)
+ * @param  {object} styleContextStack current style stack
+ * @returns {object}                   collection of inlines, minWidth, maxWidth
  */
 TextTools.prototype.buildInlines = function (textArray, styleContextStack) {
 	var measured = measure(this.fontProvider, textArray, styleContextStack);
@@ -70,9 +70,9 @@ TextTools.prototype.buildInlines = function (textArray, styleContextStack) {
 
 /**
  * Returns size of the specified string (without breaking it) using the current style
- * @param  {String} text              text to be measured
- * @param  {Object} styleContextStack current style stack
- * @return {Object}                   size of the specified string
+ * @param  {string} text              text to be measured
+ * @param  {object} styleContextStack current style stack
+ * @returns {object}                   size of the specified string
  */
 TextTools.prototype.sizeOfString = function (text, styleContextStack) {
 	text = text ? text.toString().replace(/\t/g, '    ') : '';
@@ -132,7 +132,7 @@ function splitWords(text, noWrap) {
 	var last = 0;
 	var bk;
 
-	while (bk = breaker.nextBreak()) {
+	while ((bk = breaker.nextBreak())) {
 		var word = text.slice(last, bk.position);
 
 		if (bk.required || word.match(/\r?\n$|\r$/)) { // new line

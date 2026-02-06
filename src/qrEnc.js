@@ -355,7 +355,7 @@ var calculateecc = function (poly, genpoly) {
 	var polylen = poly.length, genpolylen = genpoly.length;
 	for (var i = 0; i < genpolylen; ++i)
 		modulus.push(0);
-	for (var i = 0; i < polylen; ) {
+	for (var i = 0; i < polylen;) {
 		var quotient = GF256_INVMAP[modulus[i++]];
 		if (quotient >= 0) {
 			for (var j = 0; j < genpolylen; ++j) {
@@ -483,7 +483,7 @@ var makebasematrix = function (ver) {
 		}
 	}
 
-	return {matrix: matrix, reserved: reserved};
+	return { matrix: matrix, reserved: reserved };
 };
 
 // fills the data portion (i.e. unmarked in reserved) of the matrix with given
@@ -590,7 +590,7 @@ var evaluatematrix = function (matrix) {
 
 		// evaluate the current row
 		groups = [0]; // the first empty group of white
-		for (var j = 0; j < n; ) {
+		for (var j = 0; j < n;) {
 			var k;
 			for (k = 0; j < n && row[j]; ++k)
 				++j;
@@ -603,7 +603,7 @@ var evaluatematrix = function (matrix) {
 
 		// evaluate the current column
 		groups = [0];
-		for (var j = 0; j < n; ) {
+		for (var j = 0; j < n;) {
 			var k;
 			for (k = 0; j < n && matrix[j][i]; ++k)
 				++j;
@@ -677,10 +677,14 @@ var generate = function (data, ver, mode, ecclevel, mask) {
 //
 
 function generateFrame(data, options) {
-	var MODES = {'numeric': MODE_NUMERIC, 'alphanumeric': MODE_ALPHANUMERIC,
-		'octet': MODE_OCTET};
-	var ECCLEVELS = {'L': ECCLEVEL_L, 'M': ECCLEVEL_M, 'Q': ECCLEVEL_Q,
-		'H': ECCLEVEL_H};
+	var MODES = {
+		'numeric': MODE_NUMERIC, 'alphanumeric': MODE_ALPHANUMERIC,
+		'octet': MODE_OCTET
+	};
+	var ECCLEVELS = {
+		'L': ECCLEVEL_L, 'M': ECCLEVEL_M, 'Q': ECCLEVEL_Q,
+		'H': ECCLEVEL_H
+	};
 
 	options = options || {};
 	var ver = options.version || -1;
@@ -703,15 +707,15 @@ function generateFrame(data, options) {
 		}
 	} else if (!(mode == MODE_NUMERIC || mode == MODE_ALPHANUMERIC ||
 		mode == MODE_OCTET)) {
-		throw 'invalid or unsupported mode';
+		throw new Error('invalid or unsupported mode');
 	}
 
 	data = validatedata(mode, data);
 	if (data === null)
-		throw 'invalid data format';
+		throw new Error('invalid data format');
 
 	if (ecclevel < 0 || ecclevel > 3)
-		throw 'invalid ECC level';
+		throw new Error('invalid ECC level');
 
 	if (ver < 0) {
 		for (ver = 1; ver <= 40; ++ver) {
@@ -719,13 +723,13 @@ function generateFrame(data, options) {
 				break;
 		}
 		if (ver > 40)
-			throw 'too large data for the Qr format';
+			throw new Error('too large data for the Qr format');
 	} else if (ver < 1 || ver > 40) {
-		throw 'invalid Qr version! should be between 1 and 40';
+		throw new Error('invalid Qr version! should be between 1 and 40');
 	}
 
 	if (mask != -1 && (mask < 0 || mask > 8))
-		throw 'invalid mask';
+		throw new Error('invalid mask');
 	//console.log('version:', ver, 'mode:', mode, 'ECC:', ecclevel, 'mask:', mask )
 	return generate(data, ver, mode, ecclevel, mask);
 }

@@ -245,6 +245,9 @@ Document.prototype.print = function (options, win) {
  * download(defaultFileName = 'file.pdf', cb = null, options = {})
  * or
  * download(cb, options = {})
+ * @param defaultFileName
+ * @param cb
+ * @param options
  */
 Document.prototype.download = function (defaultFileName, cb, options) {
 	if (isFunction(defaultFileName)) {

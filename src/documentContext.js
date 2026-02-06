@@ -6,6 +6,8 @@ var isString = require('./helpers').isString;
 /**
  * Creates an instance of DocumentContext - a store for current x, y positions and available width/height.
  * It facilitates column divisions and vertical sync
+ * @param pageSize
+ * @param pageMargins
  */
 function DocumentContext(pageSize, pageMargins) {
 	this.pages = [];

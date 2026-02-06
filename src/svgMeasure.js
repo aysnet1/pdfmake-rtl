@@ -2,7 +2,10 @@
 
 var xmldoc = require('xmldoc');
 
-/** Strip unit postfix, parse number, but return undefined instead of NaN for bad input */
+/**
+ * Strip unit postfix, parse number, but return undefined instead of NaN for bad input
+ * @param textVal
+ */
 function stripUnits(textVal) {
 	var n = parseFloat(textVal);
 	if (typeof n !== 'number' || isNaN(n)) {
@@ -11,7 +14,10 @@ function stripUnits(textVal) {
 	return n;
 }
 
-/** Make sure it's valid XML and the root tage is <svg/>, returns xmldoc DOM */
+/**
+ * Make sure it's valid XML and the root tage is <svg/>, returns xmldoc DOM
+ * @param svgString
+ */
 function parseSVG(svgString) {
 	var doc;
 

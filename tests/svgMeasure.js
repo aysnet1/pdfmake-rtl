@@ -111,4 +111,4 @@ describe('SVGMeasure', function () {
             assert.equal(updatedDimensions.height, 2001);
         });
     });
-})
+});

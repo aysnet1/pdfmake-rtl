@@ -1,7 +1,7 @@
 var path = require("path");
 
 function mp(relFontPath) {
-	return path.resolve(__dirname, relFontPath)
+	return path.resolve(__dirname, relFontPath);
 }
 
 var fonts = {
@@ -19,7 +19,7 @@ var fs = require('fs');
 
 var greeting = 'Can you see me';
 var url = 'http://pdfmake.org';
-var longText = 'The amount of data that can be stored in the QR code symbol depends on the datatype (mode, or input character set), version (1, …, 40, indicating the overall dimensions of the symbol), and error correction level. The maximum storage capacities occur for 40-L symbols (version 40, error correction level L):'
+var longText = 'The amount of data that can be stored in the QR code symbol depends on the datatype (mode, or input character set), version (1, …, 40, indicating the overall dimensions of the symbol), and error correction level. The maximum storage capacities occur for 40-L symbols (version 40, error correction level L):';
 
 
 function header(text) {
@@ -52,7 +52,7 @@ var docDefinition = {
 		header('same long text with fit = 100 and padding = 1 modules in pixel'),
 		{ qr: longText, fit: 150, padding: 1 },
 	]
-}
+};
 
 var pdfDoc = printer.createPdfKitDocument(docDefinition);
 pdfDoc.pipe(fs.createWriteStream(mp('./pdfs/qrCode.pdf')));

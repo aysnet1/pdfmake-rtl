@@ -1,7 +1,7 @@
 var path = require("path");
 
 function mp(relFontPath) {
-	return path.resolve(__dirname, relFontPath)
+	return path.resolve(__dirname, relFontPath);
 }
 
 var fonts = {
@@ -38,7 +38,7 @@ ct.push({
 		{ text: 'Wavy style', decoration: 'underline', decorationStyle: 'wavy' }
 	]
 });
-ct.push(' ')
+ct.push(' ');
 ct.push({
 	columns: [
 		{ text: 'Using colors', decoration: 'underline', decorationColor: 'blue' },

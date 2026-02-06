@@ -60,7 +60,7 @@ DocPreprocessor.prototype.preprocessNode = function (node) {
 	} else if (node.pageReference || node.textReference) {
 		return this.preprocessText(node);
 	} else {
-		throw 'Unrecognized document structure: ' + JSON.stringify(node, fontStringify);
+		throw new Error('Unrecognized document structure: ' + JSON.stringify(node, fontStringify));
 	}
 };
 
@@ -166,7 +166,7 @@ DocPreprocessor.prototype.preprocessText = function (node) {
 	if (node.id) {
 		if (this.nodeReferences[node.id]) {
 			if (!this.nodeReferences[node.id]._pseudo) {
-				throw "Node id '" + node.id + "' already exists";
+				throw new Error("Node id '" + node.id + "' already exists");
 			}
 
 			this.nodeReferences[node.id]._nodeRef = this._getNodeForNodeRef(node);
@@ -212,7 +212,7 @@ DocPreprocessor.prototype.preprocessText = function (node) {
 			isSetParentNode = true;
 		}
 
-		for (var i = 0, l = node.text.length; i < l; i++) {
+		for (i = 0, l = node.text.length; i < l; i++) {
 			node.text[i] = this.preprocessNode(node.text[i]);
 		}
 
@@ -234,7 +234,7 @@ DocPreprocessor.prototype.preprocessToc = function (node) {
 
 	if (this.tocs[node.toc.id]) {
 		if (!this.tocs[node.toc.id].toc._pseudo) {
-			throw "TOC '" + node.toc.id + "' already exists";
+			throw new Error("TOC '" + node.toc.id + "' already exists");
 		}
 
 		node.toc._items = this.tocs[node.toc.id].toc._items;

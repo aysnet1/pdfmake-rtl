@@ -8,10 +8,12 @@ var isNull = require('./helpers').isNull;
 /**
  * Creates an instance of StyleContextStack used for style inheritance and style overrides
  *
- * @constructor
+ * @class
  * @this {StyleContextStack}
- * @param {Object} named styles dictionary
- * @param {Object} optional default style definition
+ * @param styleDictionary
+ * @param defaultStyle
+ * @param {object} named styles dictionary
+ * @param {object} optional default style definition
  */
 function StyleContextStack(styleDictionary, defaultStyle) {
 	this.defaultStyle = defaultStyle || {};
@@ -21,7 +23,7 @@ function StyleContextStack(styleDictionary, defaultStyle) {
 
 /**
  * Creates cloned version of current stack
- * @return {StyleContextStack} current stack snapshot
+ * @returns {StyleContextStack} current stack snapshot
  */
 StyleContextStack.prototype.clone = function () {
 	var stack = new StyleContextStack(this.styleDictionary, this.defaultStyle);
@@ -36,7 +38,7 @@ StyleContextStack.prototype.clone = function () {
 /**
  * Pushes style-name or style-overrides-object onto the stack for future evaluation
  *
- * @param {String|Object} styleNameOrOverride style-name (referring to styleDictionary) or
+ * @param {string | object} styleNameOrOverride style-name (referring to styleDictionary) or
  *                                            a new dictionary defining overriding properties
  */
 StyleContextStack.prototype.push = function (styleNameOrOverride) {
@@ -46,7 +48,7 @@ StyleContextStack.prototype.push = function (styleNameOrOverride) {
 /**
  * Removes last style-name or style-overrides-object from the stack
  *
- * @param {Number} howMany - optional number of elements to be popped (if not specified,
+ * @param {number} howMany - optional number of elements to be popped (if not specified,
  *                           one element will be removed from the stack)
  */
 StyleContextStack.prototype.pop = function (howMany) {
@@ -62,8 +64,8 @@ StyleContextStack.prototype.pop = function (howMany) {
  * pushes those elements onto the stack for future evaluation and returns the number
  * of elements pushed, so they can be easily poped then.
  *
- * @param {Object} item - an object with optional style property and/or style overrides
- * @return the number of items pushed onto the stack
+ * @param {object} item - an object with optional style property and/or style overrides
+ * @returns the number of items pushed onto the stack
  */
 StyleContextStack.prototype.autopush = function (item) {
 	if (isString(item)) {
@@ -93,9 +95,10 @@ StyleContextStack.prototype.autopush = function (item) {
  * Automatically pushes elements onto the stack, using autopush based on item,
  * executes callback and then pops elements back. Returns value returned by callback
  *
- * @param  {Object}   item - an object with optional style property and/or style overrides
+ * @param  {object}   item - an object with optional style property and/or style overrides
  * @param  {Function} function to be called between autopush and pop
- * @return {Object} value returned by callback
+ * @param callback
+ * @returns {object} value returned by callback
  */
 StyleContextStack.prototype.auto = function (item, callback) {
 	var pushedItems = this.autopush(item);
@@ -111,8 +114,8 @@ StyleContextStack.prototype.auto = function (item, callback) {
 /**
  * Evaluates stack and returns value of a named property
  *
- * @param {String} property - property name
- * @return property value or null if not found
+ * @param {string} property - property name
+ * @returns property value or null if not found
  */
 StyleContextStack.prototype.getProperty = function (property) {
 	if (this.styleOverrides) {

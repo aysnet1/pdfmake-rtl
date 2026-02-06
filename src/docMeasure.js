@@ -15,6 +15,13 @@ var pack = require('./helpers').pack;
 var qrEncoder = require('./qrEnc.js');
 
 /**
+ * @param fontProvider
+ * @param styleDictionary
+ * @param defaultStyle
+ * @param imageMeasure
+ * @param svgMeasure
+ * @param tableLayouts
+ * @param images
  * @private
  */
 function DocMeasure(fontProvider, styleDictionary, defaultStyle, imageMeasure, svgMeasure, tableLayouts, images) {
@@ -30,8 +37,8 @@ function DocMeasure(fontProvider, styleDictionary, defaultStyle, imageMeasure, s
 /**
  * Measures all nodes and sets min/max-width properties required for the second
  * layout-pass.
- * @param  {Object} docStructure document-definition-object
- * @return {Object}              document-measurement-object
+ * @param  {object} docStructure document-definition-object
+ * @returns {object}              document-measurement-object
  */
 DocMeasure.prototype.measureDocument = function (docStructure) {
 	return this.measureNode(docStructure);
@@ -440,6 +447,29 @@ DocMeasure.prototype.buildOrderedMarker = function (counter, styleStack, type, s
 		return {};
 	}
 
+	var counterTextDir = type === 'decimal' ? 'neutral' : 'ltr'; // simplified assumption
+
+	// Determine if we should treat this as RTL list marker
+	var isReviewRTL = false;
+	try {
+		// Quick check for Arabic context if possible, otherwise rely on external logic
+		// But here we just build the string.
+		// Let's assume standard behavior unless we detect we are in RTL mode?
+		// Actually, docMeasure doesn't know about RTL mode easily here without text analysis of content.
+		// However, we can use the separator to help us? No.
+
+		// The issue is "1." becomes ".1" via ElementWriter regex.
+		// If we want "1)" or "(1", we need to handle it here.
+		// User complained about "1)" becoming "(1".
+		// Visual: "(1" is correct for RTL "1)".
+
+		// Let's stick to standard generation here, and let ElementWriter handle the swapping if needed.
+		// BUT, user says "list ul fixed the number of list".
+		// Maybe we need to ensure the space is consistently at the END for LTR,
+		// which becomes START for RTL (due to my ElementWriter fix $3$2$1).
+
+	} catch (e) { }
+
 	if (separator) {
 		if (isArray(separator)) {
 			if (separator[0]) {
@@ -451,6 +481,8 @@ DocMeasure.prototype.buildOrderedMarker = function (counter, styleStack, type, s
 			}
 			counterText += ' ';
 		} else {
+			// For RTL, we might want to ensure the separator is treated correctly.
+			// Standard: "1" + "." + " " = "1. "
 			counterText += separator + ' ';
 		}
 	}

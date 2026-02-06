@@ -9,6 +9,7 @@ const PDFMakeRTL = {
     
     /**
      * Check if a character is RTL
+     * @param char
      */
     isRTLChar(char) {
         const code = char.charCodeAt(0);
@@ -24,6 +25,7 @@ const PDFMakeRTL = {
     
     /**
      * Detect text direction
+     * @param text
      */
     getTextDirection(text) {
         if (!text) return 'neutral';
@@ -47,6 +49,7 @@ const PDFMakeRTL = {
     
     /**
      * Check if text contains RTL characters
+     * @param text
      */
     containsRTL(text) {
         if (!text) return false;
@@ -55,6 +58,7 @@ const PDFMakeRTL = {
     
     /**
      * Auto-apply RTL properties to text element
+     * @param element
      */
     autoApplyRTL(element) {
         if (!element) return element;
@@ -84,6 +88,7 @@ const PDFMakeRTL = {
     
     /**
      * Process table for RTL (reverse columns if contains RTL content)
+     * @param table
      */
     processRTLTable(table) {
         if (!table || !table.body) return table;
@@ -124,6 +129,7 @@ const PDFMakeRTL = {
     
     /**
      * Process entire document for RTL
+     * @param docDef
      */
     processDocument(docDef) {
         const processElement = (element) => {

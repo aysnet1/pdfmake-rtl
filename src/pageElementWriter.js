@@ -11,6 +11,8 @@ var ElementWriter = require('./elementWriter');
  *                         a page-break occurs)
  * - transactions (used for unbreakable-blocks when we want to make sure
  *                 whole block will be rendered on the same page)
+ * @param context
+ * @param tracker
  */
 function PageElementWriter(context, tracker) {
 	this.transactionLevel = 0;
