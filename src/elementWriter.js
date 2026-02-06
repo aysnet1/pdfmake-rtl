@@ -290,7 +290,7 @@ ElementWriter.prototype.adjustRTLInlines = function (line, availableWidth) {
 	// If we have RTL inlines, reverse their order and recalculate positions
 	if (rtlInlines.length > 0) {
 		// Reverse the order of RTL inlines for proper display
-		rtlInlines.reverse();
+		rtlInlines = reverseWords(rtlInlines);
 
 		// Recalculate x positions from right to left
 		var currentX = 0;
@@ -335,6 +335,13 @@ function reverseWords(words) {
 	let reversed = [];
 	let i = words.length - 1;
 
+<<<<<<< HEAD
+=======
+function reverseWords(words) {
+	let reversed = [];
+	let i = words.length - 1;
+
+>>>>>>> dca2edc593e83277752000d1b29f17872f0ce410
 	const bracketPairs = {
 		">": "<",
 		"]": "[",
@@ -381,6 +388,10 @@ function reverseWords(words) {
 
 	return reversed;
 }
+<<<<<<< HEAD
+=======
+
+>>>>>>> dca2edc593e83277752000d1b29f17872f0ce410
 function cloneLine(line) {
 	var result = new Line(line.maxWidth);
 

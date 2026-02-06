@@ -562,8 +562,59 @@ function processAutoRTLElement(element) {
 	return element;
 }
 
+<<<<<<< HEAD
 
 
+=======
+function fixArabicTextUsingReplace(text) {
+	//if start with point remove
+	if (text.startsWith('.')) {
+		text = text.slice(1);
+	}
+
+	if (!containsRTL(text))
+		return text;
+
+	text = text
+		.replace(/\(/g, 'TEMP_OPEN_PAREN')
+		.replace(/\)/g, '(')
+		.replace(/TEMP_OPEN_PAREN/g, ')')
+
+		.replace(/\[/g, 'TEMP_OPEN_SQUARE')
+		.replace(/\]/g, '[')
+		.replace(/TEMP_OPEN_SQUARE/g, ']')
+
+		.replace(/\{/g, 'TEMP_OPEN_CURLY')
+		.replace(/\}/g, '{')
+		.replace(/TEMP_OPEN_CURLY/g, '}')
+
+		.replace(/</g, 'TEMP_OPEN_ANGLE')
+		.replace(/>/g, '<')
+		.replace(/TEMP_OPEN_ANGLE/g, '>');
+
+	return text;
+}
+
+/*
+ * Reverse a table row while preserving colSpan group semantics.
+ * This function correctly handles colSpan by keeping the span cell at the start
+	* of its group after reversal, maintaining proper header alignment.
+ *
+ * @param { Array } row - The original row array(cells may include colSpan / rowSpan).
+ * @returns { Array } - A new row array reversed for RTL with correct colSpan placement.
+ */
+function reverseTableRowPreserveSpans(row) {
+	if (!Array.isArray(row)) return row;
+
+	var n = row.length;
+	if (n === 0) return row;
+
+	// For simple reversal that maintains colSpan structure:
+	// Just reverse the array, but this works better with how pdfmake handles spans
+	return row.slice().reverse();
+
+}
+>>>>>>> dca2edc593e83277752000d1b29f17872f0ce410
 module.exports = {
 	isArabicChar: isArabicChar,
 	isPersianChar: isPersianChar,
