@@ -480,6 +480,10 @@ function fixArabicTextUsingReplace(text) {
 	if (text.startsWith('.')) {
 		text = text.slice(1);
 	}
+
+	if (!containsRTL(text))
+		return text;
+
 	text = text
 		.replace(/\(/g, 'TEMP_OPEN_PAREN')
 		.replace(/\)/g, '(')
@@ -491,9 +495,11 @@ function fixArabicTextUsingReplace(text) {
 
 		.replace(/\{/g, 'TEMP_OPEN_CURLY')
 		.replace(/\}/g, '{')
-		.replace(/TEMP_OPEN_CURLY/g, '}');
+		.replace(/TEMP_OPEN_CURLY/g, '}')
 
-
+		.replace(/</g, 'TEMP_OPEN_ANGLE')
+		.replace(/>/g, '<')
+		.replace(/TEMP_OPEN_ANGLE/g, '>');
 
 	return text;
 }
