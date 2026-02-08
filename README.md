@@ -1,4 +1,6 @@
-# pdfmake-RTL [![Node.js CI][githubactions_img]][githubactions_url] [![GitHub][github_img]][github_url] [![npm][npm_img]][npm_url] [![CDNJS][cdnjs_img]][cndjs_url]
+<!-- [![Node.js CI][githubactions_img]][githubactions_url] -->
+
+# pdfmake-RTL [![GitHub][github_img]][github_url] [![npm][npm_img]][npm_url] [![CDNJS][cdnjs_img]][cndjs_url]
 
 [githubactions_img]: https://github.com/aysnet1/pdfmake-rtl/actions/workflows/node.js.yml/badge.svg?branch=master
 [githubactions_url]: https://github.com/aysnet1/pdfmake-rtl/actions
@@ -7,7 +9,8 @@
 [npm_img]: https://img.shields.io/npm/v/pdfmake-rtl.svg?colorB=0E7FBF
 [npm_url]: https://www.npmjs.com/package/pdfmake-rtl
 [cdnjs_img]: https://img.shields.io/cdnjs/v/pdfmake-rtl.svg?colorB=0E7FBF
-[cndjs_url]: https://cdnjs.com/libraries/pdfmake-rtl
+
+<!-- [cndjs_url]: https://cdnjs.com/libraries/pdfmake-rtl -->
 
 **PDFMake RTL** is an enhanced version of PDFMake with **automatic RTL (Right-to-Left) language support** for Arabic, Persian (Farsi), Urdu, and other RTL scripts. No manual configuration needed - just write your content and the library automatically detects and handles RTL text!
 

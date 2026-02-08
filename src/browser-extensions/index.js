@@ -15,6 +15,12 @@ let defaultClientFonts = {
 		bold: 'Roboto-Medium.ttf',
 		italics: 'Roboto-Italic.ttf',
 		bolditalics: 'Roboto-MediumItalic.ttf'
+	},
+	Cairo: {
+		normal: 'Cairo-Regular.ttf',
+		bold: 'Cairo-Bold.ttf',
+		italics: 'Cairo-Regular.ttf',
+		bolditalics: 'Cairo-Bold.ttf'
 	}
 };
 

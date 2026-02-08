@@ -504,16 +504,18 @@ var docDefinition = {
 										widths: ['*', 80],
 										body: [
 											[
+												{ text: 'الاسم', alignment: 'right', bold: true, fillColor: '#FFF3E0' },
+
 												{ text: 'محمد أحمد العلي', alignment: 'right' },
-												{ text: 'الاسم', alignment: 'right', bold: true, fillColor: '#FFF3E0' }
 											],
 											[
+												{ text: 'المدينة', alignment: 'right', bold: true, fillColor: '#FFF3E0' },
 												{ text: 'القاهرة، مصر', alignment: 'right' },
-												{ text: 'المدينة', alignment: 'right', bold: true, fillColor: '#FFF3E0' }
+
 											],
 											[
+												{ text: 'المهنة', alignment: 'right', bold: true, fillColor: '#FFF3E0' },
 												{ text: 'مهندس برمجيات', alignment: 'right' },
-												{ text: 'المهنة', alignment: 'right', bold: true, fillColor: '#FFF3E0' }
 											]
 										]
 									}
