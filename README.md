@@ -16,6 +16,72 @@
 
 All existing PDFMake code works unchanged, with automatic RTL support added!
 
+## 🚀 Key Features
+
+- ✅ **Automatic RTL Detection** - No need to set `rtl` flags
+- ✅ **Smart Table Column Reversal** - Arabic/Persian/Urdu tables automatically reverse columns
+- ✅ **Unicode Script Detection** - Supports Arabic, Persian, Urdu, and extensions
+- ✅ **Automatic Font Selection** - Uses appropriate fonts per language
+- ✅ **Proper Text Alignment** - RTL text aligns right, LTR text aligns left
+- ✅ **List Bullet Positioning** - Bullets positioned correctly for RTL lists
+- ✅ **Mixed Content Support** - Handles Arabic/Persian/Urdu/English mixed content
+- ✅ **100% PDFMake Compatible** - Drop-in replacement for PDFMake
+
+## 🌐 Live Demo
+
+👉 [View Live Demo on Netlify](https://pdfmake-rtl.netlify.app)
+
+PDF document generation library for server-side and client-side in pure JavaScript.
+
+Check out [the playground](http://aysnet1.github.io/pdfmake-rtl/playground.html) and [examples](https://github.com/aysnet1/pdfmake-rtl/tree/master/examples).
+
+### Features
+
+#### 🔤 RTL Language Support
+
+- **Automatic RTL detection** for Arabic, Persian (Farsi), Urdu, and other RTL scripts
+- **Smart table column reversal** — columns automatically reverse for RTL content
+- **Automatic font selection** — uses Cairo font for Arabic, Persian, and Urdu text
+- **Proper text alignment** — RTL text automatically aligns right, LTR aligns left
+- **List bullet positioning** — bullets and numbers positioned correctly for RTL lists
+- **Mixed content handling** — seamlessly handles Arabic/Persian/Urdu/English in the same document
+- **Unicode script detection** — supports Arabic, Persian, Urdu characters and extensions
+
+#### 🗒️ Supported RTL Languages
+
+| Language          | Script  | Auto Font |
+| ----------------- | ------- | --------- |
+| Arabic            | العربية | Cairo     |
+| Persian (Farsi)   | فارسی   | Cairo     |
+| Urdu              | اردو    | Cairo     |
+| Other RTL scripts | —       | Cairo     |
+
+#### 📄 General Features
+
+- line-wrapping,
+- text-alignments (left, right, centered, justified),
+- numbered and bulleted lists (with RTL-aware bullet positioning),
+- tables and columns
+  - auto/fixed/star-sized widths,
+  - col-spans and row-spans,
+  - headers automatically repeated in case of a page-break,
+  - **automatic column reversal for RTL content**,
+- images and vector graphics,
+- convenient styling and style inheritance,
+- page headers and footers:
+  - static or dynamic content,
+  - access to current page number and page count,
+- background-layer,
+- page dimensions and orientations,
+- margins,
+- document sections,
+- custom page breaks,
+- font embedding (Cairo font included for RTL support),
+- support for complex, multi-level (nested) structures,
+- table of contents,
+- helper methods for opening/printing/downloading the generated PDF,
+- setting of PDF metadata (e.g. author, subject).
+
 ## 📦 Installation
 
 ```bash
@@ -122,72 +188,6 @@ var dd = {
 var pdf = pdfmake.createPdf(dd);
 pdf.write("output.pdf").then(() => console.log("PDF created!"));
 ```
-
-## 🚀 Key Features
-
-- ✅ **Automatic RTL Detection** - No need to set `rtl` flags
-- ✅ **Smart Table Column Reversal** - Arabic/Persian/Urdu tables automatically reverse columns
-- ✅ **Unicode Script Detection** - Supports Arabic, Persian, Urdu, and extensions
-- ✅ **Automatic Font Selection** - Uses appropriate fonts per language
-- ✅ **Proper Text Alignment** - RTL text aligns right, LTR text aligns left
-- ✅ **List Bullet Positioning** - Bullets positioned correctly for RTL lists
-- ✅ **Mixed Content Support** - Handles Arabic/Persian/Urdu/English mixed content
-- ✅ **100% PDFMake Compatible** - Drop-in replacement for PDFMake
-
-## 🌐 Live Demo
-
-👉 [View Live Demo on Netlify](https://pdfmake-rtl.netlify.app)
-
-PDF document generation library for server-side and client-side in pure JavaScript.
-
-Check out [the playground](http://aysnet1.github.io/pdfmake-rtl/playground.html) and [examples](https://github.com/aysnet1/pdfmake-rtl/tree/master/examples).
-
-### Features
-
-#### 🔤 RTL Language Support
-
-- **Automatic RTL detection** for Arabic, Persian (Farsi), Urdu, and other RTL scripts
-- **Smart table column reversal** — columns automatically reverse for RTL content
-- **Automatic font selection** — uses Cairo font for Arabic, Persian, and Urdu text
-- **Proper text alignment** — RTL text automatically aligns right, LTR aligns left
-- **List bullet positioning** — bullets and numbers positioned correctly for RTL lists
-- **Mixed content handling** — seamlessly handles Arabic/Persian/Urdu/English in the same document
-- **Unicode script detection** — supports Arabic, Persian, Urdu characters and extensions
-
-#### 🗒️ Supported RTL Languages
-
-| Language          | Script  | Auto Font |
-| ----------------- | ------- | --------- |
-| Arabic            | العربية | Cairo     |
-| Persian (Farsi)   | فارسی   | Cairo     |
-| Urdu              | اردو    | Cairo     |
-| Other RTL scripts | —       | Cairo     |
-
-#### 📄 General Features
-
-- line-wrapping,
-- text-alignments (left, right, centered, justified),
-- numbered and bulleted lists (with RTL-aware bullet positioning),
-- tables and columns
-  - auto/fixed/star-sized widths,
-  - col-spans and row-spans,
-  - headers automatically repeated in case of a page-break,
-  - **automatic column reversal for RTL content**,
-- images and vector graphics,
-- convenient styling and style inheritance,
-- page headers and footers:
-  - static or dynamic content,
-  - access to current page number and page count,
-- background-layer,
-- page dimensions and orientations,
-- margins,
-- document sections,
-- custom page breaks,
-- font embedding (Cairo font included for RTL support),
-- support for complex, multi-level (nested) structures,
-- table of contents,
-- helper methods for opening/printing/downloading the generated PDF,
-- setting of PDF metadata (e.g. author, subject).
 
 ## Documentation
 
