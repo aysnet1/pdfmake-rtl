@@ -23,7 +23,7 @@ __webpack_require__.d(__webpack_exports__, {
 });
 
 // EXTERNAL MODULE: ./node_modules/pdfkit/js/pdfkit.es.js
-var pdfkit_es = __webpack_require__(941);
+var pdfkit_es = __webpack_require__(5072);
 ;// ./src/PDFDocument.js
 /* provided dependency */ var Buffer = __webpack_require__(783)["Buffer"];
 
@@ -5168,9 +5168,8 @@ class ElementWriter extends events.EventEmitter {
   /**
    * Adjust RTL inline positioning - reorder inlines for proper visual display
    * @param {object} line - Line containing RTL text
-   * @param {number} availableWidth - Available width for the line
    */
-  adjustRTLInlines(line, availableWidth) {
+  adjustRTLInlines(line) {
     if (!line.inlines || line.inlines.length === 0) {
       return;
     }
@@ -5216,7 +5215,7 @@ class ElementWriter extends events.EventEmitter {
       });
 
       // Add RTL inlines with bracket mirroring
-      const NUMBER_PUNCTUATION_REGEX = /^(\d+)([.:\/\-)(]+)(\s*)$/;
+      const NUMBER_PUNCTUATION_REGEX = /^(\d+)([.:/\-)(]+)(\s*)$/;
       rtlInlines.forEach(inline => {
         // Apply context-aware bracket mirroring for inlines with RTL characters
         if (containsRTL(inline.text)) {
@@ -5541,6 +5540,8 @@ function addPageItem(page, item, index) {
 
 /**
  * Reverse word order for RTL display, keeping bracketed groups together
+ * @param {Array} words
+ * @returns {Array}
  */
 function reverseWords(words) {
   let reversed = [];
@@ -5564,7 +5565,7 @@ function reverseWords(words) {
       if (!word.text.includes(openingBracket)) {
         for (let j = i - 1; j >= 0; j--) {
           group.unshift(words[j]);
-          if (words[j].text.match(/[<\[({]/)) {
+          if (words[j].text.match(/[<\\[({]/)) {
             openFound = true;
             i = j - 1;
             break;
@@ -8897,7 +8898,7 @@ class OutputDocument {
 }
 /* harmony default export */ const src_OutputDocument = (OutputDocument);
 // EXTERNAL MODULE: ./node_modules/file-saver/dist/FileSaver.min.js
-var FileSaver_min = __webpack_require__(8512);
+var FileSaver_min = __webpack_require__(201);
 ;// ./src/browser-extensions/OutputDocumentBrowser.js
 
 
@@ -22335,7 +22336,7 @@ module.exports = {
 
 /***/ },
 
-/***/ 941
+/***/ 5072
 (__unused_webpack_module, exports, __webpack_require__) {
 
 "use strict";
@@ -49446,7 +49447,7 @@ module.exports = function whichTypedArray(value) {
 
 /***/ },
 
-/***/ 8512
+/***/ 201
 (module, exports, __webpack_require__) {
 
 var __WEBPACK_AMD_DEFINE_FACTORY__, __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;(function(a,b){if(true)!(__WEBPACK_AMD_DEFINE_ARRAY__ = [], __WEBPACK_AMD_DEFINE_FACTORY__ = (b),
