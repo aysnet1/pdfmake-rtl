@@ -23,7 +23,7 @@ __webpack_require__.d(__webpack_exports__, {
 });
 
 // EXTERNAL MODULE: ./node_modules/pdfkit/js/pdfkit.es.js
-var pdfkit_es = __webpack_require__(652);
+var pdfkit_es = __webpack_require__(6654);
 ;// ./src/PDFDocument.js
 /* provided dependency */ var Buffer = __webpack_require__(783)["Buffer"];
 
@@ -9175,7 +9175,7 @@ class OutputDocument {
 }
 /* harmony default export */ const src_OutputDocument = (OutputDocument);
 // EXTERNAL MODULE: ./node_modules/file-saver/dist/FileSaver.min.js
-var FileSaver_min = __webpack_require__(9001);
+var FileSaver_min = __webpack_require__(3919);
 ;// ./src/browser-extensions/OutputDocumentBrowser.js
 
 
@@ -22613,7 +22613,7 @@ module.exports = {
 
 /***/ },
 
-/***/ 652
+/***/ 6654
 (__unused_webpack_module, exports, __webpack_require__) {
 
 "use strict";
@@ -49724,7 +49724,7 @@ module.exports = function whichTypedArray(value) {
 
 /***/ },
 
-/***/ 9001
+/***/ 3919
 (module, exports, __webpack_require__) {
 
 var __WEBPACK_AMD_DEFINE_FACTORY__, __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;(function(a,b){if(true)!(__WEBPACK_AMD_DEFINE_ARRAY__ = [], __WEBPACK_AMD_DEFINE_FACTORY__ = (b),
