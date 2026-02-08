@@ -6,7 +6,7 @@ var Roboto = require('../fonts/Roboto');
 pdfmake.addFonts(Roboto);
 
 var Cairo = require('../fonts/Cairo');
-const { text } = require('pdfkit');
+
 pdfmake.addFonts(Cairo);
 
 var dd = {
