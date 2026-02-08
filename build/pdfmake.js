@@ -1,4 +1,4 @@
-/*! pdfmake-rtlv v1.0.0, @license MIT, @link http://pdfmake.org */
+/*! @digicole/pdfmake-rtl v2.0.0, @license MIT, @link https://github.com/aysnet1/pdfmake-rtl#readme */
 (function webpackUniversalModuleDefinition(root, factory) {
 	if(typeof exports === 'object' && typeof module === 'object')
 		module.exports = factory();
@@ -23,7 +23,7 @@ __webpack_require__.d(__webpack_exports__, {
 });
 
 // EXTERNAL MODULE: ./node_modules/pdfkit/js/pdfkit.es.js
-var pdfkit_es = __webpack_require__(8839);
+var pdfkit_es = __webpack_require__(1341);
 ;// ./src/PDFDocument.js
 /* provided dependency */ var Buffer = __webpack_require__(783)["Buffer"];
 
@@ -543,10 +543,48 @@ function fixArabicTextUsingReplace(text) {
     '<': '>',
     '>': '<'
   };
+  const openBrackets = {
+    '(': ')',
+    '[': ']',
+    '{': '}',
+    '<': '>'
+  };
+
+  // --- Pre-pass: find matched bracket pairs ---
+  // Any bracket that is part of a balanced open/close pair within the same
+  // text should NOT be mirrored, because the PDF engine will display them
+  // in visual order and mirroring would invert them.
+  let pairedIndices = new Set();
+  let stack = [];
+  for (let i = 0; i < text.length; i++) {
+    let ch = text[i];
+    if (openBrackets[ch] !== undefined) {
+      stack.push({
+        ch: ch,
+        idx: i
+      });
+    } else if (ch === ')' || ch === ']' || ch === '}' || ch === '>') {
+      // Find matching opening bracket on stack
+      for (let s = stack.length - 1; s >= 0; s--) {
+        if (openBrackets[stack[s].ch] === ch) {
+          pairedIndices.add(stack[s].idx);
+          pairedIndices.add(i);
+          stack.splice(s, 1);
+          break;
+        }
+      }
+    }
+  }
   let result = '';
   for (let i = 0; i < text.length; i++) {
     const ch = text[i];
     if (mirrorMap[ch] !== undefined) {
+      // If this bracket is part of a balanced pair, do NOT mirror it
+      if (pairedIndices.has(i)) {
+        result += ch;
+        continue;
+      }
+
       // Find the previous non-space character
       let prevChar = null;
       for (let j = i - 1; j >= 0; j--) {
@@ -574,7 +612,7 @@ function fixArabicTextUsingReplace(text) {
       else if (!prevChar && nextChar && DIGIT_OR_LTR.test(nextChar)) {
         result += ch;
       }
-      // Otherwise mirror — bracket is in RTL context
+      // Otherwise mirror — bracket is in RTL context (unpaired bracket)
       else {
         result += mirrorMap[ch];
       }
@@ -606,13 +644,12 @@ function applyRTLToNode(node, forceRTL) {
     shouldBeRTL = getTextDirection(textStr) === 'rtl';
   }
   if (shouldBeRTL) {
-    // Set structural RTL properties (alignment, font)
+    // Set structural RTL properties (alignment)
+    // Font is resolved later by TextInlines.measure with priority:
+    // item font > style font > defaultStyle font > auto-detect (Cairo for RTL, Roboto for LTR)
     // Text shaping (bracket mirroring) is handled at render time in ElementWriter
     if (!node.alignment) {
       node.alignment = 'right';
-    }
-    if (node.font === undefined && !node.font) {
-      node.font = 'Cairo'; // Default RTL font
     }
   }
   return node;
@@ -624,12 +661,46 @@ function applyRTLToNode(node, forceRTL) {
  * @param {boolean} forceRTL - Force RTL layout
  * @returns {object} - Processed table node
  */
+/**
+ * Reverse a table row for RTL layout, correctly handling colSpan groups.
+ * A colSpan cell and its trailing empty placeholders ({}) are kept together
+ * as a single logical group and reversed as a unit.
+ * @param {Array} row - Table row array
+ * @returns {Array} - Reversed row
+ */
+function reverseTableRow(row) {
+  // Build logical groups: each group is either a single cell or a colSpan cell + its placeholders
+  let groups = [];
+  let i = 0;
+  while (i < row.length) {
+    let cell = row[i];
+    let span = cell && typeof cell === 'object' && cell.colSpan && cell.colSpan > 1 ? cell.colSpan : 1;
+    let group = row.slice(i, i + span);
+    groups.push(group);
+    i += span;
+  }
+  // Reverse the groups, then flatten back to a single array
+  groups.reverse();
+  let result = [];
+  for (let g = 0; g < groups.length; g++) {
+    for (let k = 0; k < groups[g].length; k++) {
+      result.push(groups[g][k]);
+    }
+  }
+  return result;
+}
 function processRTLTable(tableNode, forceRTL) {
   if (forceRTL === void 0) {
     forceRTL = false;
   }
   if (!tableNode || !tableNode.table || !tableNode.table.body) {
     return tableNode;
+  }
+
+  // Support rtl: true directly on the table object: table: { rtl: true, body: [...] }
+  // This forces RTL layout regardless of content detection
+  if (tableNode.table.rtl === true) {
+    forceRTL = true;
   }
 
   // Determine if table should be RTL
@@ -654,10 +725,10 @@ function processRTLTable(tableNode, forceRTL) {
     shouldBeRTL = totalCells > 0 && rtlCellCount / totalCells >= 0.3;
   }
   if (shouldBeRTL) {
-    // Reverse table columns for RTL layout
+    // Reverse table columns for RTL layout, handling colSpan correctly
     tableNode.table.body = tableNode.table.body.map(row => {
       if (Array.isArray(row)) {
-        return row.slice().reverse();
+        return reverseTableRow(row);
       }
       return row;
     });
@@ -671,12 +742,11 @@ function processRTLTable(tableNode, forceRTL) {
     tableNode.table.body = tableNode.table.body.map(row => {
       if (Array.isArray(row)) {
         return row.map(cell => {
-          // Convert string cells to objects so we can set font
+          // Convert string cells to objects so we can set alignment
           if (typeof cell === 'string') {
             return {
               text: cell,
-              alignment: 'right',
-              font: 'Cairo'
+              alignment: 'right'
             };
           }
           // Skip null/undefined
@@ -713,8 +783,7 @@ function processRTLList(listItems, forceRTL) {
       if (shouldBeRTL) {
         return {
           text: item,
-          alignment: 'right',
-          font: 'Cairo'
+          alignment: 'right'
         };
       }
       return item;
@@ -762,8 +831,7 @@ function processRTLElement(element, forceRTL) {
     if (shouldBeRTL) {
       return {
         text: element,
-        alignment: 'right',
-        font: 'Cairo'
+        alignment: 'right'
       };
     }
     return element;
@@ -2919,13 +2987,21 @@ class TextInlines {
       }
     }
     array.forEach(item => {
-      let font = src_StyleContextStack.getStyleProperty(item, styleContextStack, 'font', 'Roboto');
+      // Font resolution priority:
+      // 1. Item-level font (set directly on the text node)
+      // 2. Style/named-style font (from style stack)
+      // 3. defaultStyle font (from document definition)
+      // 4. Auto-detect: Cairo for RTL/Arabic text, Roboto for LTR/Latin text
+      let font = src_StyleContextStack.getStyleProperty(item, styleContextStack, 'font', null);
       let bold = src_StyleContextStack.getStyleProperty(item, styleContextStack, 'bold', false);
       let italics = src_StyleContextStack.getStyleProperty(item, styleContextStack, 'italics', false);
-
-      // If text contains ANY RTL characters, use Cairo font to ensure proper rendering
-      if (item.text && containsRTL(item.text) && font !== 'Cairo') {
-        font = 'Cairo';
+      if (!font) {
+        // No font set by item, style, or defaultStyle — auto-detect from text content
+        if (item.text && containsRTL(item.text)) {
+          font = 'Cairo';
+        } else {
+          font = 'Roboto';
+        }
       }
       item.font = this.pdfDocument.provideFont(font, bold, italics);
       item.alignment = src_StyleContextStack.getStyleProperty(item, styleContextStack, 'alignment', 'left');
@@ -4453,10 +4529,19 @@ class DocMeasure {
       }
     }
     let markerColor = src_StyleContextStack.getStyleProperty(item, styleStack, 'markerColor', undefined) || styleStack.getProperty('color') || 'black';
+
+    // Resolve font: item font > style stack font > defaultStyle font > auto-detect (Cairo for RTL, Roboto for LTR)
+    let markerFont = src_StyleContextStack.getStyleProperty(item, styleStack, 'font', null);
+    if (!markerFont) {
+      markerFont = isRTL ? 'Cairo' : undefined;
+    }
     let textArray = {
       text: counterText,
       color: markerColor
     };
+    if (markerFont) {
+      textArray.font = markerFont;
+    }
     return {
       _inlines: this.textInlines.buildInlines(textArray, styleStack).items
     };
@@ -5131,6 +5216,12 @@ class ElementWriter extends events.EventEmitter {
     return position;
   }
   alignLine(line) {
+    // Skip alignment for list marker lines - their position is manually
+    // calculated in processList and should not be affected by inherited
+    // alignment or direction properties
+    if (line.listMarker) {
+      return;
+    }
     let width = this.context().availableWidth;
     let lineWidth = line.getWidth();
     let alignment = line.inlines && line.inlines.length > 0 && line.inlines[0].alignment;
@@ -5166,73 +5257,294 @@ class ElementWriter extends events.EventEmitter {
   }
 
   /**
-   * Adjust RTL inline positioning - reorder inlines for proper visual display
+   * Adjust RTL inline positioning - reorder inlines for proper visual display.
+   *
+   * Implements a simplified Unicode Bidirectional Algorithm (UBA):
+   * 0. Pre-split inlines at RTL↔neutral boundaries so punctuation like "/" between
+   *    Arabic and Latin text is treated as a separate neutral inline
+   * 1. Classify each inline as RTL, LTR, or neutral
+   * 2. Group consecutive same-direction inlines into directional "runs"
+   * 3. Resolve neutral runs: attach to adjacent run based on surrounding context
+   * 4. Reverse the order of runs (base direction is RTL)
+   * 5. Within each LTR run keep order; within each RTL run reverse inlines
+   * 6. Recalculate x positions
+   *
+   * This preserves the positional relationship between adjacent text and
+   * punctuation (e.g. "العربية/arabic" keeps the "/" attached correctly).
+   *
    * @param {object} line - Line containing RTL text
-   * @param {number} availableWidth - Available width for the line
    */
-  adjustRTLInlines(line, availableWidth) {
+  adjustRTLInlines(line) {
     if (!line.inlines || line.inlines.length === 0) {
       return;
     }
-    let rtlInlines = [];
-    let ltrInlines = [];
-
-    // Separate RTL, LTR, and neutral inlines using Sticky Direction
     const LTR_REGEX = /[A-Za-z\u00C0-\u024F\u1E00-\u1EFF]/;
-    let currentDir = 'rtl'; // Default to RTL since this is an RTL line
+    const NUMBER_PUNCTUATION_REGEX = /^(\d+)([.:/\-)(]+)(\s*)$/;
+    // Characters that are "boundary neutral" — separators/punctuation between scripts
+    const BOUNDARY_NEUTRAL = /[\/\\\-()[\]{}<>:;.,!?@#$%^&*_=+|~`'"،؛؟\s]/;
 
+    // --- Step 0: Pre-split inlines at RTL↔neutral and LTR↔neutral boundaries ---
+    // e.g. "العربية/" → ["العربية", "/"]  and  "hello-" → ["hello", "-"]
+    let splitInlines = [];
     line.inlines.forEach(inline => {
-      let hasStrongLTR = LTR_REGEX.test(inline.text);
-      let hasStrongRTL = containsRTL(inline.text);
-      if (hasStrongLTR && !hasStrongRTL) {
-        currentDir = 'ltr';
-        ltrInlines.push(inline);
-      } else if (hasStrongRTL && !hasStrongLTR) {
-        currentDir = 'rtl';
-        rtlInlines.push(inline);
-      } else if (hasStrongLTR && hasStrongRTL) {
-        currentDir = 'rtl';
-        rtlInlines.push(inline);
-      } else {
-        // Neutral - adopt direction of preceding content
-        if (currentDir === 'ltr') {
-          ltrInlines.push(inline);
-        } else {
-          rtlInlines.push(inline);
+      let text = inline.text;
+      if (!text || text.length === 0) {
+        splitInlines.push(inline);
+        return;
+      }
+      let hasStrongRTL = containsRTL(text);
+      let hasStrongLTR = LTR_REGEX.test(text);
+
+      // Only split if the inline has strong directional chars AND trailing/leading neutrals
+      if ((hasStrongRTL || hasStrongLTR) && text.length > 1) {
+        // Split trailing neutral characters (e.g. "العربية/" → "العربية" + "/")
+        let trailingStart = text.length;
+        while (trailingStart > 0) {
+          let ch = text[trailingStart - 1];
+          if (BOUNDARY_NEUTRAL.test(ch) && !containsRTL(ch) && !LTR_REGEX.test(ch)) {
+            trailingStart--;
+          } else {
+            break;
+          }
         }
+
+        // Split leading neutral characters (e.g. "/العربية" → "/" + "العربية")
+        let leadingEnd = 0;
+        while (leadingEnd < text.length) {
+          let ch = text[leadingEnd];
+          if (BOUNDARY_NEUTRAL.test(ch) && !containsRTL(ch) && !LTR_REGEX.test(ch)) {
+            leadingEnd++;
+          } else {
+            break;
+          }
+        }
+
+        // Only split if there's a meaningful core left
+        if ((leadingEnd > 0 || trailingStart < text.length) && leadingEnd < trailingStart) {
+          let leadingText = text.slice(0, leadingEnd);
+          let coreText = text.slice(leadingEnd, trailingStart);
+          let trailingText = text.slice(trailingStart);
+          if (leadingText) {
+            let clone = Object.assign({}, inline);
+            clone.text = leadingText;
+            clone.width = inline.font ? inline.font.widthOfString(leadingText, inline.fontSize, inline.fontFeatures) + (inline.characterSpacing || 0) * (leadingText.length - 1) : 0;
+            clone._isSplit = true;
+            splitInlines.push(clone);
+          }
+          if (coreText) {
+            let clone = Object.assign({}, inline);
+            clone.text = coreText;
+            clone.width = inline.font ? inline.font.widthOfString(coreText, inline.fontSize, inline.fontFeatures) + (inline.characterSpacing || 0) * (coreText.length - 1) : 0;
+            clone._isSplit = true;
+            splitInlines.push(clone);
+          }
+          if (trailingText) {
+            let clone = Object.assign({}, inline);
+            clone.text = trailingText;
+            clone.width = inline.font ? inline.font.widthOfString(trailingText, inline.fontSize, inline.fontFeatures) + (inline.characterSpacing || 0) * (trailingText.length - 1) : 0;
+            clone._isSplit = true;
+            splitInlines.push(clone);
+          }
+        } else {
+          splitInlines.push(inline);
+        }
+      } else {
+        splitInlines.push(inline);
       }
     });
-    if (rtlInlines.length > 0) {
-      // Reverse RTL inlines for proper visual order
-      rtlInlines = reverseWords(rtlInlines);
-      let currentX = 0;
-      let reorderedInlines = [];
 
-      // Add LTR inlines first
-      ltrInlines.forEach(inline => {
-        inline.x = currentX;
-        currentX += inline.width;
-        reorderedInlines.push(inline);
-      });
+    // --- Step 1: Classify each inline ---
+    const classified = splitInlines.map(inline => {
+      let hasStrongLTR = LTR_REGEX.test(inline.text);
+      let hasStrongRTL = containsRTL(inline.text);
+      let dir;
+      if (hasStrongRTL && hasStrongLTR) {
+        // Mixed — treat as RTL (predominant for RTL lines)
+        dir = 'rtl';
+      } else if (hasStrongRTL) {
+        dir = 'rtl';
+      } else if (hasStrongLTR) {
+        dir = 'ltr';
+      } else {
+        dir = 'neutral'; // punctuation, digits, spaces only
+      }
+      return {
+        inline,
+        dir
+      };
+    });
 
-      // Add RTL inlines with bracket mirroring
-      const NUMBER_PUNCTUATION_REGEX = /^(\d+)([.:\/\-)(]+)(\s*)$/;
-      rtlInlines.forEach(inline => {
-        // Apply context-aware bracket mirroring for inlines with RTL characters
-        if (containsRTL(inline.text)) {
+    // --- Step 2: Build directional runs (groups of consecutive same-direction) ---
+    let runs = [];
+    let currentRun = null;
+    classified.forEach(item => {
+      if (!currentRun || currentRun.dir !== item.dir) {
+        currentRun = {
+          dir: item.dir,
+          inlines: []
+        };
+        runs.push(currentRun);
+      }
+      currentRun.inlines.push(item.inline);
+    });
+
+    // --- Step 3: Resolve neutral runs ---
+    // Step 3a: Bracket pair resolution (UBA rule N0).
+    // Find matching bracket pairs across runs. If the content between
+    // a "(" neutral run and a ")" neutral run is predominantly one direction,
+    // merge the opening bracket, content, and closing bracket into that direction.
+    const OPEN_BRACKETS = /[(\[{<]/;
+    const CLOSE_BRACKETS = /[)\]}>]/;
+    const BRACKET_MATCH = {
+      '(': ')',
+      '[': ']',
+      '{': '}',
+      '<': '>'
+    };
+    for (let i = 0; i < runs.length; i++) {
+      if (runs[i].dir !== 'neutral') continue;
+
+      // Check if this neutral run contains an opening bracket
+      let openBracket = null;
+      for (let k = 0; k < runs[i].inlines.length; k++) {
+        let txt = runs[i].inlines[k].text.trim();
+        if (OPEN_BRACKETS.test(txt)) {
+          openBracket = txt.match(OPEN_BRACKETS)[0];
+          break;
+        }
+      }
+      if (!openBracket) continue;
+      let closeBracket = BRACKET_MATCH[openBracket];
+
+      // Search forward for the matching closing bracket
+      for (let j = i + 1; j < runs.length; j++) {
+        if (runs[j].dir === 'neutral') {
+          let hasClose = false;
+          for (let k = 0; k < runs[j].inlines.length; k++) {
+            if (runs[j].inlines[k].text.indexOf(closeBracket) >= 0) {
+              hasClose = true;
+              break;
+            }
+          }
+          if (!hasClose) continue;
+
+          // Found matching close bracket at run j.
+          // Determine predominant direction of content between i and j
+          let innerLtr = 0,
+            innerRtl = 0;
+          for (let m = i + 1; m < j; m++) {
+            if (runs[m].dir === 'ltr') innerLtr += runs[m].inlines.length;else if (runs[m].dir === 'rtl') innerRtl += runs[m].inlines.length;
+          }
+
+          // Resolve bracket pair to inner content direction, or LTR if neutral-only
+          let pairDir = innerLtr >= innerRtl ? 'ltr' : 'rtl';
+
+          // Set the direction for the opening and closing bracket runs
+          runs[i].dir = pairDir;
+          runs[j].dir = pairDir;
+          break; // only match the first closing bracket
+        }
+      }
+    }
+
+    // Step 3b: General neutral resolution.
+    // A neutral run takes the direction of its neighbors. If both neighbors
+    // agree, use that direction. If they disagree, use the base direction (RTL).
+    // If only one neighbor exists, use that neighbor's resolved direction.
+    for (let i = 0; i < runs.length; i++) {
+      if (runs[i].dir !== 'neutral') continue;
+      let prevDir = null;
+      for (let j = i - 1; j >= 0; j--) {
+        if (runs[j].dir !== 'neutral') {
+          prevDir = runs[j].dir;
+          break;
+        }
+      }
+      let nextDir = null;
+      for (let j = i + 1; j < runs.length; j++) {
+        if (runs[j].dir !== 'neutral') {
+          nextDir = runs[j].dir;
+          break;
+        }
+      }
+      if (prevDir && nextDir) {
+        runs[i].dir = prevDir === nextDir ? prevDir : 'rtl';
+      } else if (prevDir) {
+        runs[i].dir = prevDir;
+      } else if (nextDir) {
+        runs[i].dir = nextDir;
+      } else {
+        runs[i].dir = 'rtl'; // all neutral → base direction
+      }
+    }
+
+    // --- Step 3c: Merge adjacent runs that now share the same direction ---
+    let merged = [runs[0]];
+    for (let i = 1; i < runs.length; i++) {
+      let last = merged[merged.length - 1];
+      if (last.dir === runs[i].dir) {
+        last.inlines = last.inlines.concat(runs[i].inlines);
+      } else {
+        merged.push(runs[i]);
+      }
+    }
+    runs = merged;
+
+    // --- Step 4: Reverse run order (base direction is RTL) ---
+    runs.reverse();
+
+    // --- Step 5: Within each RTL run, reverse the inline order ---
+    runs.forEach(run => {
+      if (run.dir === 'rtl') {
+        run.inlines.reverse();
+      }
+      // LTR runs keep their original inline order
+    });
+
+    // --- Step 6: Flatten, apply bracket mirroring, recalculate x positions ---
+    // UBA Rule L4: after reordering, mirror bracket glyphs in RTL context
+    let reorderedInlines = [];
+    let currentX = 0;
+    const MIRROR_MAP = {
+      '(': ')',
+      ')': '(',
+      '[': ']',
+      ']': '[',
+      '{': '}',
+      '}': '{',
+      '<': '>',
+      '>': '<'
+    };
+    runs.forEach(run => {
+      run.inlines.forEach(inline => {
+        // Apply context-aware bracket mirroring for RTL inlines that contain Arabic text
+        if (run.dir === 'rtl' && containsRTL(inline.text)) {
           inline.text = fixArabicTextUsingReplace(inline.text);
         }
 
-        // Fix number+punctuation rendering in RTL
-        if (NUMBER_PUNCTUATION_REGEX.test(inline.text)) {
+        // UBA Rule L4: Mirror standalone bracket characters in RTL runs.
+        // After Step 5 reversed the inline order, brackets like "(" and ")"
+        // are in swapped positions. Mirroring the glyph restores correct visuals.
+        // e.g. reversed ")" at position 0 → mirror to "(" → visually correct.
+        if (run.dir === 'rtl' && !containsRTL(inline.text) && !LTR_REGEX.test(inline.text)) {
+          let mirrored = '';
+          for (let c = 0; c < inline.text.length; c++) {
+            let ch = inline.text[c];
+            mirrored += MIRROR_MAP[ch] !== undefined ? MIRROR_MAP[ch] : ch;
+          }
+          inline.text = mirrored;
+        }
+
+        // Fix number+punctuation rendering in RTL context
+        if (run.dir === 'rtl' && NUMBER_PUNCTUATION_REGEX.test(inline.text)) {
           inline.text = inline.text.replace(NUMBER_PUNCTUATION_REGEX, ' $3$2$1');
         }
         inline.x = currentX;
         currentX += inline.width;
         reorderedInlines.push(inline);
       });
-      line.inlines = reorderedInlines;
-    }
+    });
+    line.inlines = reorderedInlines;
   }
   addImage(image, index) {
     let context = this.context();
@@ -5537,48 +5849,6 @@ function addPageItem(page, item, index) {
   } else {
     page.items.splice(index, 0, item);
   }
-}
-
-/**
- * Reverse word order for RTL display, keeping bracketed groups together
- */
-function reverseWords(words) {
-  let reversed = [];
-  let i = words.length - 1;
-  const bracketPairs = {
-    '>': '<',
-    ']': '[',
-    '}': '{'
-  };
-  while (i >= 0) {
-    const word = words[i];
-    const closingBracket = word.text.match(/[>\])}]/);
-    let wordHasRtl = true;
-    if (word && typeof word.text === 'string') {
-      wordHasRtl = containsRTL(word.text);
-    }
-    if (!wordHasRtl && closingBracket) {
-      const openingBracket = bracketPairs[closingBracket[0]];
-      const group = [word];
-      let openFound = false;
-      if (!word.text.includes(openingBracket)) {
-        for (let j = i - 1; j >= 0; j--) {
-          group.unshift(words[j]);
-          if (words[j].text.match(/[<\[({]/)) {
-            openFound = true;
-            i = j - 1;
-            break;
-          }
-        }
-      }
-      reversed.push(...group);
-      if (!openFound) i--;
-      continue;
-    }
-    reversed.push(word);
-    i--;
-  }
-  return reversed;
 }
 /* harmony default export */ const src_ElementWriter = (ElementWriter);
 ;// ./src/standardPageSizes.js
@@ -7477,10 +7747,18 @@ class LayoutBuilder {
           this.writer.addVector(vector);
         } else if (marker._inlines) {
           let markerLine = new src_Line(this.pageSize.width);
-          markerLine.addInline(marker._inlines[0]);
+          // Reset alignment and direction on marker inlines to prevent
+          // alignLine() from applying alignment offset on top of the
+          // manually calculated marker position
+          let markerInline = Object.assign({}, marker._inlines[0]);
+          markerInline.alignment = 'left';
+          markerInline.isRTL = false;
+          markerInline.direction = 'ltr';
+          markerLine.addInline(markerInline);
+          markerLine.listMarker = true;
           if (isRTLList) {
             // RTL: place text marker (number) in the right gap area with spacing
-            markerLine.x = this.writer.context().availableWidth + 4;
+            markerLine.x = this.writer.context().availableWidth + 3;
           } else {
             markerLine.x = -marker._minWidth;
           }
@@ -8512,17 +8790,13 @@ class PdfPrinter {
     }
 
     // Set default style with Cairo font for RTL content if available
-    const defaultStyle = docDefinition.defaultStyle || {
+    const defaultStyle = docDefinition.defaultStyle || (docDefinition.rtl === true || this._containsRTLContent(docDefinition.content) ? {
+      fontSize: 14,
+      font: 'Cairo'
+    } : {
       fontSize: 12,
       font: 'Roboto'
-    };
-
-    // If document has RTL content and Cairo font is available, use Cairo as default
-    if (this.fontDescriptors.Cairo && (docDefinition.rtl === true || this._containsRTLContent(docDefinition.content))) {
-      if (!defaultStyle.font) {
-        defaultStyle.font = 'Cairo';
-      }
-    }
+    });
     let pages = builder.layoutDocument(docDefinition.content, this.pdfKitDoc, docDefinition.styles || {}, defaultStyle, docDefinition.background, docDefinition.header, docDefinition.footer, docDefinition.watermark, docDefinition.pageBreakBefore);
     let maxNumberPages = docDefinition.maxPagesNumber || -1;
     if (isNumber(maxNumberPages) && maxNumberPages > -1) {
@@ -8897,7 +9171,7 @@ class OutputDocument {
 }
 /* harmony default export */ const src_OutputDocument = (OutputDocument);
 // EXTERNAL MODULE: ./node_modules/file-saver/dist/FileSaver.min.js
-var FileSaver_min = __webpack_require__(1763);
+var FileSaver_min = __webpack_require__(9304);
 ;// ./src/browser-extensions/OutputDocumentBrowser.js
 
 
@@ -9059,8 +9333,8 @@ let defaultClientFonts = {
   Cairo: {
     normal: 'Cairo-Regular.ttf',
     bold: 'Cairo-Bold.ttf',
-    italics: 'Cairo-Light.ttf',
-    bolditalics: 'Cairo-SemiBold.ttf'
+    italics: 'Cairo-Regular.ttf',
+    bolditalics: 'Cairo-Bold.ttf'
   }
 };
 class browser_extensions_pdfmake extends base {
@@ -22341,7 +22615,7 @@ module.exports = {
 
 /***/ },
 
-/***/ 8839
+/***/ 1341
 (__unused_webpack_module, exports, __webpack_require__) {
 
 "use strict";
@@ -49452,7 +49726,7 @@ module.exports = function whichTypedArray(value) {
 
 /***/ },
 
-/***/ 1763
+/***/ 9304
 (module, exports, __webpack_require__) {
 
 var __WEBPACK_AMD_DEFINE_FACTORY__, __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;(function(a,b){if(true)!(__WEBPACK_AMD_DEFINE_ARRAY__ = [], __WEBPACK_AMD_DEFINE_FACTORY__ = (b),
