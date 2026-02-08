@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>pdfmake-rtl — Simple RTL Table Example</title>
+	<style>
+		body {
+			font-family: Arial, sans-serif;
+			max-width: 700px;
+			margin: 40px auto;
+			padding: 0 20px;
+		}
+
+		h1 {
+			color: #2c3e50;
+		}
+
+		button {
+			padding: 12px 24px;
+			font-size: 16px;
+			cursor: pointer;
+			border: none;
+			border-radius: 6px;
+			margin: 5px;
+			color: #fff;
+		}
+
+		.btn-open {
+			background: #2980b9;
+		}
+
+		.btn-download {
+			background: #27ae60;
+		}
+
+		button:hover {
+			opacity: 0.85;
+		}
+
+		pre {
+			background: #f4f4f4;
+			padding: 16px;
+			border-radius: 6px;
+			overflow-x: auto;
+			font-size: 13px;
+		}
+	</style>
+</head>
+
+<body>
+	<h1>📄 pdfmake-rtl — Simple RTL Table</h1>
+	<p>A minimal example using <strong>pdfmake-rtl</strong> with Arabic/English tables and paragraphs. Fonts (Roboto +
+		Cairo) are loaded automatically.</p>
+
+	<button class="btn-open" onclick="openPdf()">Open PDF</button>
+	<button class="btn-download" onclick="downloadPdf()">Download PDF</button>
+
+	<h3>Source Code</h3>
+	<pre id="code"></pre>
+
+	<!-- pdfmake-rtl from npm / CDN -->
+	<script src="../build/pdfmake.min.js"></script>
+	<script src="../build/vfs_fonts.js"></script>
+
+	<!-- Add Cairo font for RTL support (Roboto is included by default) -->
+	<script src="../build/fonts/Cairo.js"></script>
+
+	<!--
+		If using from npm / CDN, replace the three scripts above with:
+
+		<script src="https://unpkg.com/pdfmake-rtl/build/pdfmake.min.js"></script>
+		<script src="https://unpkg.com/pdfmake-rtl/build/vfs_fonts.js"></script>
+		<script src="https://unpkg.com/pdfmake-rtl/build/fonts/Cairo.js"></script>
+	-->
+
+	<script>
+		// ── Document Definition ──────────────────────────────────────
+		var dd = {
+			rtl: true,
+			content: [
+
+				// ── RTL Paragraph (auto-detected) ──
+				{ text: 'مرحباً بكم في مكتبة pdfmake-rtl', fontSize: 20, bold: true, margin: [0, 0, 0, 10] },
+				{ text: 'هذه المكتبة تدعم اللغة العربية والفارسية والأردية تلقائياً بدون أي إعداد يدوي.', margin: [0, 0, 0, 10] },
+
+				// ── LTR Paragraph ──
+				{ text: 'Welcome to pdfmake-rtl', fontSize: 20, bold: true, margin: [0, 10, 0, 10] },
+				{ text: 'This library supports Arabic, Persian, and Urdu automatically. No manual RTL configuration needed!', margin: [0, 0, 0, 15] },
+
+				// ── Simple RTL Table (auto-detected) ──
+				{ text: 'جدول بسيط — Simple Table', fontSize: 16, bold: true, margin: [0, 10, 0, 8] },
+				{
+					table: {
+						headerRows: 1,
+						widths: ['*', '*', '*'],
+						body: [
+							[
+								{ text: 'الراتب', bold: true },
+								{ text: 'القسم', bold: true },
+								{ text: 'الاسم', bold: true }
+							],
+							['5000', 'تكنولوجيا', 'أحمد محمد'],
+							['6000', 'تسويق', 'فاطمة علي'],
+							['4500', 'مالية', 'خالد حسن']
+						]
+					}
+				},
+
+				// ── Force RTL on table with table.rtl ──
+				{ text: '\nجدول مع rtl: true', fontSize: 16, bold: true, margin: [0, 10, 0, 8] },
+				{
+					table: {
+						rtl: true,
+						headerRows: 1,
+						widths: [60, '*', '*', 40],
+						body: [
+							[
+								{ text: 'Status', bold: true },
+								{ text: 'Department', bold: true },
+								{ text: 'Name', bold: true },
+								{ text: '#', bold: true }
+							],
+							['Active', 'Engineering', 'Ali Hassan', '1'],
+							['Active', 'Marketing', 'Sara Ahmed', '2'],
+							['Leave', 'Finance', 'Omar Khalil', '3']
+						]
+					}
+				},
+
+				// ── Mixed Language Table ──
+				{ text: '\nجدول مختلط — Mixed Table', fontSize: 16, bold: true, margin: [0, 10, 0, 8] },
+				{
+					table: {
+						widths: ['*', '*'],
+						body: [
+							[
+								{ text: 'القيمة / Value', bold: true },
+								{ text: 'الحقل / Field', bold: true }
+							],
+							['أحمد (Ahmed)', 'الاسم / Name'],
+							['القاهرة / Cairo', 'المدينة / City'],
+							['ahmed@email.com', 'البريد / Email']
+						]
+					}
+				}
+			],
+			// defaultStyle: {
+			// 	font: 'Cairo' // Use Cairo as the default font for RTL support
+			// }
+		};
+
+		// ── Actions ──────────────────────────────────────────────────
+		function openPdf() {
+			pdfMake.createPdf(dd).open();
+		}
+
+		function downloadPdf() {
+			pdfMake.createPdf(dd).download('rtl-table-example.pdf');
+		}
+
+		// Show source code on page
+		document.getElementById('code').textContent = 'var dd = ' + JSON.stringify(dd, null, 2).slice(0, 1500) + '\n  ...';
+	</script>
+</body>
+
+</html>

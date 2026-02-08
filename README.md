@@ -1,6 +1,6 @@
 <!-- [![Node.js CI][githubactions_img]][githubactions_url] -->
 
-# pdfmake-RTL [![GitHub][github_img]][github_url] [![npm][npm_img]][npm_url] [![CDNJS][cdnjs_img]][cndjs_url]
+# pdfmake-RTL [![GitHub][github_img]][github_url] [![npm][npm_img]][npm_url]
 
 [githubactions_img]: https://github.com/aysnet1/pdfmake-rtl/actions/workflows/node.js.yml/badge.svg?branch=master
 [githubactions_url]: https://github.com/aysnet1/pdfmake-rtl/actions
@@ -15,6 +15,113 @@
 **PDFMake RTL** is an enhanced version of PDFMake with **automatic RTL (Right-to-Left) language support** for Arabic, Persian (Farsi), Urdu, and other RTL scripts. No manual configuration needed - just write your content and the library automatically detects and handles RTL text!
 
 All existing PDFMake code works unchanged, with automatic RTL support added!
+
+## 📦 Installation
+
+```bash
+npm install pdfmake-rtl
+```
+
+## ⚡ Quick Start — Browser (Client-Side)
+
+```html
+<!-- Load pdfmake-rtl + fonts -->
+<script src="https://unpkg.com/pdfmake-rtl/build/pdfmake.min.js"></script>
+<script src="https://unpkg.com/pdfmake-rtl/build/vfs_fonts.js"></script>
+<script src="https://unpkg.com/pdfmake-rtl/build/fonts/Cairo.js"></script>
+
+<script>
+	var dd = {
+		rtl: true,
+		// If Cairo font isn't applied automatically, set `rtl: true` to force RTL mode or add defaultStyle Cairo
+		content: [
+			// RTL paragraph — auto-detected, no configuration needed
+			{ text: "مرحباً بكم في مكتبة pdfmake-rtl", fontSize: 20, bold: true },
+			{
+				text: "هذه المكتبة تدعم اللغة العربية تلقائياً",
+				margin: [0, 0, 0, 15],
+			},
+
+			// RTL table — columns auto-reverse for Arabic content
+			{
+				table: {
+					widths: ["*", "*", "*"],
+					body: [
+						[
+							{ text: "الراتب", bold: true },
+							{ text: "القسم", bold: true },
+							{ text: "الاسم", bold: true },
+						],
+						["5000", "تكنولوجيا", "أحمد محمد"],
+						["6000", "تسويق", "فاطمة علي"],
+					],
+				},
+			},
+
+			// Force RTL on any table with rtl: true
+			{
+				table: {
+					rtl: true,
+					widths: ["*", "*", "*"],
+					body: [
+						[
+							{ text: "Status", bold: true },
+							{ text: "Name", bold: true },
+							{ text: "#", bold: true },
+						],
+						["Active", "Ali Hassan", "1"],
+						["Active", "Sara Ahmed", "2"],
+					],
+				},
+			},
+		],
+	};
+
+	pdfMake.createPdf(dd).open();
+</script>
+```
+
+> 📄 See the full working example: [`examples/simple-rtl-table.html`](examples/simple-rtl-table.html)
+
+## ⚡ Quick Start — Node.js (Server-Side)
+
+```js
+var pdfmake = require("pdfmake-rtl");
+
+// Add fonts
+// Cairo is the default font for RTL languages (Arabic, Persian, Urdu)
+// Roboto is the default font for LTR/Latin text
+var Roboto = require("pdfmake-rtl/fonts/Roboto");
+pdfmake.addFonts(Roboto);
+
+var Cairo = require("pdfmake-rtl/fonts/Cairo");
+pdfmake.addFonts(Cairo);
+
+var dd = {
+	// If Cairo font isn't applied automatically, set `rtl: true` to force RTL mode or add defaultStyle Cairo
+	rtl: true, // Forces RTL layout direction for the entire document
+	content: [
+		{ text: "مرحباً بكم في مكتبة pdfmake-rtl", fontSize: 20, bold: true },
+		{
+			table: {
+				widths: ["*", "*", "*"],
+				body: [
+					[
+						{ text: "الراتب", bold: true },
+						{ text: "القسم", bold: true },
+						{ text: "الاسم", bold: true },
+					],
+					["5000", "تكنولوجيا", "أحمد محمد"],
+					["6000", "تسويق", "فاطمة علي"],
+				],
+			},
+		},
+	],
+};
+
+var pdf = pdfmake.createPdf(dd);
+pdf.write("output.pdf").then(() => console.log("PDF created!"));
+```
 
 ## 🚀 Key Features
 

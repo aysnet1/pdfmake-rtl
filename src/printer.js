@@ -96,14 +96,9 @@ class PdfPrinter {
 		}
 
 		// Set default style with Cairo font for RTL content if available
-		const defaultStyle = docDefinition.defaultStyle || { fontSize: 12, font: 'Roboto' };
+		const defaultStyle = docDefinition.defaultStyle || ((docDefinition.rtl === true || this._containsRTLContent(docDefinition.content)) ? { fontSize: 14, font: 'Cairo' } : { fontSize: 12, font: 'Roboto' });
 
-		// If document has RTL content and Cairo font is available, use Cairo as default
-		if (this.fontDescriptors.Cairo && (docDefinition.rtl === true || this._containsRTLContent(docDefinition.content))) {
-			if (!defaultStyle.font) {
-				defaultStyle.font = 'Cairo';
-			}
-		}
+
 
 		let pages = builder.layoutDocument(docDefinition.content, this.pdfKitDoc, docDefinition.styles || {}, defaultStyle, docDefinition.background, docDefinition.header, docDefinition.footer, docDefinition.watermark, docDefinition.pageBreakBefore);
 		let maxNumberPages = docDefinition.maxPagesNumber || -1;

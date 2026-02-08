@@ -1,4 +1,4 @@
-/*! pdfmake-rtl v2.0.0, @license MIT, @link https://github.com/aysnet1/pdfmake-rtl#readme */
+/*! @digicole/pdfmake-rtl v2.0.0, @license MIT, @link https://github.com/aysnet1/pdfmake-rtl#readme */
 (function webpackUniversalModuleDefinition(root, factory) {
 	if(typeof exports === 'object' && typeof module === 'object')
 		module.exports = factory();
@@ -23,7 +23,7 @@ __webpack_require__.d(__webpack_exports__, {
 });
 
 // EXTERNAL MODULE: ./node_modules/pdfkit/js/pdfkit.es.js
-var pdfkit_es = __webpack_require__(6654);
+var pdfkit_es = __webpack_require__(1341);
 ;// ./src/PDFDocument.js
 /* provided dependency */ var Buffer = __webpack_require__(783)["Buffer"];
 
@@ -8790,17 +8790,13 @@ class PdfPrinter {
     }
 
     // Set default style with Cairo font for RTL content if available
-    const defaultStyle = docDefinition.defaultStyle || {
+    const defaultStyle = docDefinition.defaultStyle || (docDefinition.rtl === true || this._containsRTLContent(docDefinition.content) ? {
+      fontSize: 14,
+      font: 'Cairo'
+    } : {
       fontSize: 12,
       font: 'Roboto'
-    };
-
-    // If document has RTL content and Cairo font is available, use Cairo as default
-    if (this.fontDescriptors.Cairo && (docDefinition.rtl === true || this._containsRTLContent(docDefinition.content))) {
-      if (!defaultStyle.font) {
-        defaultStyle.font = 'Cairo';
-      }
-    }
+    });
     let pages = builder.layoutDocument(docDefinition.content, this.pdfKitDoc, docDefinition.styles || {}, defaultStyle, docDefinition.background, docDefinition.header, docDefinition.footer, docDefinition.watermark, docDefinition.pageBreakBefore);
     let maxNumberPages = docDefinition.maxPagesNumber || -1;
     if (isNumber(maxNumberPages) && maxNumberPages > -1) {
@@ -9175,7 +9171,7 @@ class OutputDocument {
 }
 /* harmony default export */ const src_OutputDocument = (OutputDocument);
 // EXTERNAL MODULE: ./node_modules/file-saver/dist/FileSaver.min.js
-var FileSaver_min = __webpack_require__(3919);
+var FileSaver_min = __webpack_require__(9304);
 ;// ./src/browser-extensions/OutputDocumentBrowser.js
 
 
@@ -9333,6 +9329,12 @@ let defaultClientFonts = {
     bold: 'Roboto-Medium.ttf',
     italics: 'Roboto-Italic.ttf',
     bolditalics: 'Roboto-MediumItalic.ttf'
+  },
+  Cairo: {
+    normal: 'Cairo-Regular.ttf',
+    bold: 'Cairo-Bold.ttf',
+    italics: 'Cairo-Regular.ttf',
+    bolditalics: 'Cairo-Bold.ttf'
   }
 };
 class browser_extensions_pdfmake extends base {
@@ -22613,7 +22615,7 @@ module.exports = {
 
 /***/ },
 
-/***/ 6654
+/***/ 1341
 (__unused_webpack_module, exports, __webpack_require__) {
 
 "use strict";
@@ -49724,7 +49726,7 @@ module.exports = function whichTypedArray(value) {
 
 /***/ },
 
-/***/ 3919
+/***/ 9304
 (module, exports, __webpack_require__) {
 
 var __WEBPACK_AMD_DEFINE_FACTORY__, __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;(function(a,b){if(true)!(__WEBPACK_AMD_DEFINE_ARRAY__ = [], __WEBPACK_AMD_DEFINE_FACTORY__ = (b),
