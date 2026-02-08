@@ -104,13 +104,22 @@ class TextInlines {
 		}
 
 		array.forEach(item => {
-			let font = StyleContextStack.getStyleProperty(item, styleContextStack, 'font', 'Roboto');
+			// Font resolution priority:
+			// 1. Item-level font (set directly on the text node)
+			// 2. Style/named-style font (from style stack)
+			// 3. defaultStyle font (from document definition)
+			// 4. Auto-detect: Cairo for RTL/Arabic text, Roboto for LTR/Latin text
+			let font = StyleContextStack.getStyleProperty(item, styleContextStack, 'font', null);
 			let bold = StyleContextStack.getStyleProperty(item, styleContextStack, 'bold', false);
 			let italics = StyleContextStack.getStyleProperty(item, styleContextStack, 'italics', false);
 
-			// If text contains ANY RTL characters, use Cairo font to ensure proper rendering
-			if (item.text && containsRTL(item.text) && font !== 'Cairo') {
-				font = 'Cairo';
+			if (!font) {
+				// No font set by item, style, or defaultStyle — auto-detect from text content
+				if (item.text && containsRTL(item.text)) {
+					font = 'Cairo';
+				} else {
+					font = 'Roboto';
+				}
 			}
 
 			item.font = this.pdfDocument.provideFont(font, bold, italics);

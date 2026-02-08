@@ -160,11 +160,41 @@ function fixArabicTextUsingReplace(text) {
 
 	const DIGIT_OR_LTR = /[0-9A-Za-z\u00C0-\u024F\u1E00-\u1EFF]/;
 	const mirrorMap = { '(': ')', ')': '(', '[': ']', ']': '[', '{': '}', '}': '{', '<': '>', '>': '<' };
+	const openBrackets = { '(': ')', '[': ']', '{': '}', '<': '>' };
+
+	// --- Pre-pass: find matched bracket pairs ---
+	// Any bracket that is part of a balanced open/close pair within the same
+	// text should NOT be mirrored, because the PDF engine will display them
+	// in visual order and mirroring would invert them.
+	let pairedIndices = new Set();
+	let stack = [];
+	for (let i = 0; i < text.length; i++) {
+		let ch = text[i];
+		if (openBrackets[ch] !== undefined) {
+			stack.push({ ch: ch, idx: i });
+		} else if (ch === ')' || ch === ']' || ch === '}' || ch === '>') {
+			// Find matching opening bracket on stack
+			for (let s = stack.length - 1; s >= 0; s--) {
+				if (openBrackets[stack[s].ch] === ch) {
+					pairedIndices.add(stack[s].idx);
+					pairedIndices.add(i);
+					stack.splice(s, 1);
+					break;
+				}
+			}
+		}
+	}
 
 	let result = '';
 	for (let i = 0; i < text.length; i++) {
 		const ch = text[i];
 		if (mirrorMap[ch] !== undefined) {
+			// If this bracket is part of a balanced pair, do NOT mirror it
+			if (pairedIndices.has(i)) {
+				result += ch;
+				continue;
+			}
+
 			// Find the previous non-space character
 			let prevChar = null;
 			for (let j = i - 1; j >= 0; j--) {
@@ -192,7 +222,7 @@ function fixArabicTextUsingReplace(text) {
 			else if (!prevChar && nextChar && DIGIT_OR_LTR.test(nextChar)) {
 				result += ch;
 			}
-			// Otherwise mirror — bracket is in RTL context
+			// Otherwise mirror — bracket is in RTL context (unpaired bracket)
 			else {
 				result += mirrorMap[ch];
 			}
@@ -225,13 +255,12 @@ function applyRTLToNode(node, forceRTL = false) {
 	}
 
 	if (shouldBeRTL) {
-		// Set structural RTL properties (alignment, font)
+		// Set structural RTL properties (alignment)
+		// Font is resolved later by TextInlines.measure with priority:
+		// item font > style font > defaultStyle font > auto-detect (Cairo for RTL, Roboto for LTR)
 		// Text shaping (bracket mirroring) is handled at render time in ElementWriter
 		if (!node.alignment) {
 			node.alignment = 'right';
-		}
-		if (node.font === undefined && !node.font) {
-			node.font = 'Cairo'; // Default RTL font
 		}
 	}
 
@@ -244,9 +273,44 @@ function applyRTLToNode(node, forceRTL = false) {
  * @param {boolean} forceRTL - Force RTL layout
  * @returns {object} - Processed table node
  */
+/**
+ * Reverse a table row for RTL layout, correctly handling colSpan groups.
+ * A colSpan cell and its trailing empty placeholders ({}) are kept together
+ * as a single logical group and reversed as a unit.
+ * @param {Array} row - Table row array
+ * @returns {Array} - Reversed row
+ */
+function reverseTableRow(row) {
+	// Build logical groups: each group is either a single cell or a colSpan cell + its placeholders
+	let groups = [];
+	let i = 0;
+	while (i < row.length) {
+		let cell = row[i];
+		let span = (cell && typeof cell === 'object' && cell.colSpan && cell.colSpan > 1) ? cell.colSpan : 1;
+		let group = row.slice(i, i + span);
+		groups.push(group);
+		i += span;
+	}
+	// Reverse the groups, then flatten back to a single array
+	groups.reverse();
+	let result = [];
+	for (let g = 0; g < groups.length; g++) {
+		for (let k = 0; k < groups[g].length; k++) {
+			result.push(groups[g][k]);
+		}
+	}
+	return result;
+}
+
 function processRTLTable(tableNode, forceRTL = false) {
 	if (!tableNode || !tableNode.table || !tableNode.table.body) {
 		return tableNode;
+	}
+
+	// Support rtl: true directly on the table object: table: { rtl: true, body: [...] }
+	// This forces RTL layout regardless of content detection
+	if (tableNode.table.rtl === true) {
+		forceRTL = true;
 	}
 
 	// Determine if table should be RTL
@@ -275,10 +339,10 @@ function processRTLTable(tableNode, forceRTL = false) {
 	}
 
 	if (shouldBeRTL) {
-		// Reverse table columns for RTL layout
+		// Reverse table columns for RTL layout, handling colSpan correctly
 		tableNode.table.body = tableNode.table.body.map(row => {
 			if (Array.isArray(row)) {
-				return row.slice().reverse();
+				return reverseTableRow(row);
 			}
 			return row;
 		});
@@ -292,9 +356,9 @@ function processRTLTable(tableNode, forceRTL = false) {
 		tableNode.table.body = tableNode.table.body.map(row => {
 			if (Array.isArray(row)) {
 				return row.map(cell => {
-					// Convert string cells to objects so we can set font
+					// Convert string cells to objects so we can set alignment
 					if (typeof cell === 'string') {
-						return { text: cell, alignment: 'right', font: 'Cairo' };
+						return { text: cell, alignment: 'right' };
 					}
 					// Skip null/undefined
 					if (!cell || typeof cell !== 'object') return cell;
@@ -329,8 +393,7 @@ function processRTLList(listItems, forceRTL = false) {
 			if (shouldBeRTL) {
 				return {
 					text: item,
-					alignment: 'right',
-					font: 'Cairo'
+					alignment: 'right'
 				};
 			}
 			return item;
@@ -378,8 +441,7 @@ function processRTLElement(element, forceRTL = false) {
 		if (shouldBeRTL) {
 			return {
 				text: element,
-				alignment: 'right',
-				font: 'Cairo'
+				alignment: 'right'
 			};
 		}
 		return element;

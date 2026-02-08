@@ -426,10 +426,20 @@ class DocMeasure {
 		}
 
 		let markerColor = StyleContextStack.getStyleProperty(item, styleStack, 'markerColor', undefined) || styleStack.getProperty('color') || 'black';
+
+		// Resolve font: item font > style stack font > defaultStyle font > auto-detect (Cairo for RTL, Roboto for LTR)
+		let markerFont = StyleContextStack.getStyleProperty(item, styleStack, 'font', null);
+		if (!markerFont) {
+			markerFont = isRTL ? 'Cairo' : undefined;
+		}
+
 		let textArray = {
 			text: counterText,
 			color: markerColor
 		};
+		if (markerFont) {
+			textArray.font = markerFont;
+		}
 
 		return { _inlines: this.textInlines.buildInlines(textArray, styleStack).items };
 	}

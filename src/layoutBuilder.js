@@ -1048,10 +1048,18 @@ class LayoutBuilder {
 					this.writer.addVector(vector);
 				} else if (marker._inlines) {
 					let markerLine = new Line(this.pageSize.width);
-					markerLine.addInline(marker._inlines[0]);
+					// Reset alignment and direction on marker inlines to prevent
+					// alignLine() from applying alignment offset on top of the
+					// manually calculated marker position
+					let markerInline = Object.assign({}, marker._inlines[0]);
+					markerInline.alignment = 'left';
+					markerInline.isRTL = false;
+					markerInline.direction = 'ltr';
+					markerLine.addInline(markerInline);
+					markerLine.listMarker = true;
 					if (isRTLList) {
 						// RTL: place text marker (number) in the right gap area with spacing
-						markerLine.x = this.writer.context().availableWidth + 4;
+						markerLine.x = this.writer.context().availableWidth + 3;
 					} else {
 						markerLine.x = -marker._minWidth;
 					}
