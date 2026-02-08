@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang='en' ng-app='pdfmake'>
+
 <head>
 	<meta charset='utf-8'>
 	<meta http-equiv='X-UA-Compatible' content='IE=edge'>
@@ -11,165 +12,169 @@
 	<link rel='stylesheet' href='pdfmake.css'>
 	<link href='http://fonts.googleapis.com/css?family=Open+Sans:300,400,600,700' rel='stylesheet' type='text/css'>
 </head>
+
 <body ng-controller='PlaygroundController'>
 
-<header id='top' class='navbar navbar-default' role='navigation'>
-	<div class='container'>
-		<div class='navbar-header'>
-		<button type='button' class='navbar-toggle' data-toggle='collapse' data-target='.navbar-collapse'>
-			<span class='sr-only'>Toggle navigation</span>
-			<span class='icon-bar'></span>
-			<span class='icon-bar'></span>
-			<span class='icon-bar'></span>
-		</button>
-		<a class='navbar-brand' href='index.html#'>pdf<span style='font-weight: 600'>make</span></a>
-		</div>
-		<nav class='navbar-collapse collapse' role='navigation' style='height: 1px;'>
-			<ul class='nav navbar-nav navbar-right'>
-				<li><a href='index.html#/features'>Features</a></li>
-				<li><a href='https://pdfmake.github.io/docs/0.3/'>Documentation</a></li>
-				<li><a href='#'>Playground</a></li>
-				<li><a href='https://github.com/bpampuch/pdfmake'>Sources</a></li>
-			</ul>
-		</nav>
-	</div>
-</header>
-
-<div class='playground'>
-	<div class='container'>
-		<span id='stats'>{{stats}}</span>
-
-		<ul id='printThis'>
-			<li ng-click='openPdf()'>open</li>
-			<li ng-click='print()'>print</li>
-			<li ng-click='download()'>download</li>
-		</ul>
-
-		<ul id='exampleList'>
-			<li ng-repeat='e in examples' ng-click='e.activate()'>{{e.name}}</li>
-		</ul>
-	</div>
-</div>
-
-<div class='playgroundBody'>
-	<div class='notEnoughSpace'>
+	<header id='top' class='navbar navbar-default' role='navigation'>
 		<div class='container'>
-			<h1>Playground does not make too much sense when horizontal resolution is below 300px</h1>
+			<div class='navbar-header'>
+				<button type='button' class='navbar-toggle' data-toggle='collapse' data-target='.navbar-collapse'>
+					<span class='sr-only'>Toggle navigation</span>
+					<span class='icon-bar'></span>
+					<span class='icon-bar'></span>
+					<span class='icon-bar'></span>
+				</button>
+				<a class='navbar-brand' href='index.html#'>pdf<span style='font-weight: 600'>make</span></a>
+			</div>
+			<nav class='navbar-collapse collapse' role='navigation' style='height: 1px;'>
+				<ul class='nav navbar-nav navbar-right'>
+					<li><a href='index.html#/features'>Features</a></li>
+					<li><a href='https://pdfmake.github.io/docs/0.3/'>Documentation</a></li>
+					<li><a href='#'>Playground</a></li>
+					<li><a href='https://github.com/aysnet1/pdfmake-rtl'>Sources</a></li>
+				</ul>
+			</nav>
+		</div>
+	</header>
+
+	<div class='playground'>
+		<div class='container'>
+			<span id='stats'>{{stats}}</span>
+
+			<ul id='printThis'>
+				<li ng-click='openPdf()'>open</li>
+				<li ng-click='print()'>print</li>
+				<li ng-click='download()'>download</li>
+			</ul>
+
+			<ul id='exampleList'>
+				<li ng-repeat='e in examples' ng-click='e.activate()'>{{e.name}}</li>
+			</ul>
 		</div>
 	</div>
-	<div class='content'>
-		<div id='editor'></div>
-		<iframe id='pdfV'></iframe>
 
+	<div class='playgroundBody'>
+		<div class='notEnoughSpace'>
+			<div class='container'>
+				<h1>Playground does not make too much sense when horizontal resolution is below 300px</h1>
+			</div>
+		</div>
+		<div class='content'>
+			<div id='editor'></div>
+			<iframe id='pdfV'></iframe>
+
+		</div>
 	</div>
-</div>
 
 
-<script type="text/javascript" charset="utf-8">
-	function PlaygroundController($scope, $http) {
-		$scope.examples = [];
+	<script type="text/javascript" charset="utf-8">
+		function PlaygroundController($scope, $http) {
+			$scope.examples = [];
 
-		var editor = ace.edit('editor');
-		setupEditor(editor);
-		var names = ['basics', 'styles1', 'styles2', 'styles3', 'columns', 'tables', 'lists', 'margin', 'images' ];
+			var editor = ace.edit('editor');
+			setupEditor(editor);
+			var names = ['basics', 'rtl', 'styles1', 'styles2', 'styles3', 'columns', 'tables', 'lists', 'margin', 'images'];
 
-		var i = 0;
-		['basics', 'named-styles', 'inline-styling', 'style-overrides', 'columns', 'tables', 'lists', 'margins', 'images'].forEach(function(example) {
-			$scope.examples.push({
-				name: names[i++],
-				activate: function() {
-					$http.get('samples/' + example).success(function(data) {
-						editor.getSession().setValue('// playground requires you to assign document definition to a variable called dd\n\nvar dd = {\n' + data.replace(/(\r?)\n/g, '\n').replace(/(^)/gm, '\t') + '\n}');
-					});
-				}
-			});
-		});
-
-		var old = localStorage.pdfMakeDD;
-
-		if (!old) {
-			$scope.examples[0].activate();
-		} else {
-			editor.getSession().setValue(old);
-		}
-
-		var timer;
-
-		function setupEditor() {
-			var lastGen, lastChanged;
-
-			editor.setTheme('ace/theme/monokai');
-			editor.getSession().setMode('ace/mode/javascript');
-
-			editor.getSession().on('change', function(e) {
-				if (timer) {
-					clearTimeout(timer);
-				}
-				lastChanged = new Date();
-
-				localStorage.pdfMakeDD = editor.getSession().getValue();
-
-				timer = setTimeout(function() {
-					if (!lastGen || lastGen < lastChanged) {
-						generate();
-					};
-				}, 300);
-			});
-
-			function generate() {
-				lastGen = new Date();
-
-				eval(editor.getSession().getValue());
-
-				pdfMake.createPdf(dd).getDataUrl().then((outDoc) => {
-					$scope.$apply(function() {
-						$scope.stats = 'generated in ' + (new Date().getTime() - lastGen.getTime()) + ' ms';
-					});
-
-					document.getElementById('pdfV').src = outDoc;
-				}, err => {
-					console.error(err);
+			var i = 0;
+			['basics', 'rtl-mix', 'named-styles', 'inline-styling', 'style-overrides', 'columns', 'tables', 'lists', 'margins', 'images'].forEach(function (example) {
+				$scope.examples.push({
+					name: names[i++],
+					activate: function () {
+						$http.get('samples/' + example).success(function (data) {
+							editor.getSession().setValue('// playground requires you to assign document definition to a variable called dd\n\nvar dd = {\n' + data.replace(/(\r?)\n/g, '\n').replace(/(^)/gm, '\t') + '\n}');
+						});
+					}
 				});
+			});
+
+			var old = localStorage.pdfMakeDD;
+
+			if (!old) {
+				$scope.examples[0].activate();
+			} else {
+				editor.getSession().setValue(old);
 			}
 
-			$scope.print = function() {
-				eval(editor.getSession().getValue());
-				pdfMake.createPdf(dd).print();
-			};
+			var timer;
 
-			$scope.openPdf = function() {
-				eval(editor.getSession().getValue());
-				pdfMake.createPdf(dd).open();
-			};
+			function setupEditor() {
+				var lastGen, lastChanged;
 
-			$scope.download = function() {
-				eval(editor.getSession().getValue());
-				pdfMake.createPdf(dd).download('sample.pdf');
-			};
-		}
-	};
-</script>
+				editor.setTheme('ace/theme/monokai');
+				editor.getSession().setMode('ace/mode/javascript');
 
-<script src='https://ajax.googleapis.com/ajax/libs/jquery/1.11.0/jquery.min.js'></script>
-<script src='//netdna.bootstrapcdn.com/bootstrap/3.1.1/js/bootstrap.min.js'></script>
-<script src='//cdnjs.cloudflare.com/ajax/libs/angular.js/1.2.10/angular.min.js'></script>
-<script src='//cdnjs.cloudflare.com/ajax/libs/angular.js/1.2.10/angular-route.min.js'></script>
-<script type='text/javascript' src='pdfmake.js'></script>
+				editor.getSession().on('change', function (e) {
+					if (timer) {
+						clearTimeout(timer);
+					}
+					lastChanged = new Date();
 
-<script type="text/javascript" charset="utf-8" src='build/pdfmake.min.js'></script>
-<script type="text/javascript" charset="utf-8" src='build/vfs_fonts.js'></script>
-<script type="text/javascript" charset="utf-8" src='ace-builds/src-min/ace.js'></script>
+					localStorage.pdfMakeDD = editor.getSession().getValue();
 
-<script>
-  (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
-  (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
-  m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
-  })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+					timer = setTimeout(function () {
+						if (!lastGen || lastGen < lastChanged) {
+							generate();
+						};
+					}, 300);
+				});
 
-  ga('create', 'UA-50027145-1', 'pdfmake.org');
-  ga('send', 'pageview');
+				function generate() {
+					lastGen = new Date();
 
-</script>
+					eval(editor.getSession().getValue());
+
+					pdfMake.createPdf(dd).getDataUrl().then((outDoc) => {
+						$scope.$apply(function () {
+							$scope.stats = 'generated in ' + (new Date().getTime() - lastGen.getTime()) + ' ms';
+						});
+
+						document.getElementById('pdfV').src = outDoc;
+					}, err => {
+						console.error(err);
+					});
+				}
+
+				$scope.print = function () {
+					eval(editor.getSession().getValue());
+					pdfMake.createPdf(dd).print();
+				};
+
+				$scope.openPdf = function () {
+					eval(editor.getSession().getValue());
+					pdfMake.createPdf(dd).open();
+				};
+
+				$scope.download = function () {
+					eval(editor.getSession().getValue());
+					pdfMake.createPdf(dd).download('sample.pdf');
+				};
+			}
+		};
+	</script>
+
+	<script src='https://ajax.googleapis.com/ajax/libs/jquery/1.11.0/jquery.min.js'></script>
+	<script src='//netdna.bootstrapcdn.com/bootstrap/3.1.1/js/bootstrap.min.js'></script>
+	<script src='//cdnjs.cloudflare.com/ajax/libs/angular.js/1.2.10/angular.min.js'></script>
+	<script src='//cdnjs.cloudflare.com/ajax/libs/angular.js/1.2.10/angular-route.min.js'></script>
+	<script type='text/javascript' src='pdfmake.js'></script>
+
+	<script type="text/javascript" charset="utf-8" src='build/pdfmake.min.js'></script>
+	<script type="text/javascript" charset="utf-8" src='build/vfs_fonts.js'></script>
+	<script type="text/javascript" charset="utf-8" src='ace-builds/src-min/ace.js'></script>
+
+	<script>
+		(function (i, s, o, g, r, a, m) {
+			i['GoogleAnalyticsObject'] = r; i[r] = i[r] || function () {
+				(i[r].q = i[r].q || []).push(arguments)
+			}, i[r].l = 1 * new Date(); a = s.createElement(o),
+				m = s.getElementsByTagName(o)[0]; a.async = 1; a.src = g; m.parentNode.insertBefore(a, m)
+		})(window, document, 'script', '//www.google-analytics.com/analytics.js', 'ga');
+
+		ga('create', 'UA-50027145-1', 'pdfmake.org');
+		ga('send', 'pageview');
+
+	</script>
 
 </body>
+
 </html>
