@@ -1,15 +1,8 @@
-var fonts = {
-	Roboto: {
-		normal: 'fonts/Roboto-Regular.ttf',
-		bold: 'fonts/Roboto-Medium.ttf',
-		italics: 'fonts/Roboto-Italic.ttf',
-		bolditalics: 'fonts/Roboto-MediumItalic.ttf'
-	}
-};
+var pdfmake = require('../js/index'); // only during development, otherwise use the following line
+//var pdfmake = require('pdfmake');
 
-var PdfPrinter = require('../src/printer');
-var printer = new PdfPrinter(fonts);
-var fs = require('fs');
+var Roboto = require('../fonts/Roboto');
+pdfmake.addFonts(Roboto);
 
 var docDefinition = {
 	version: '1.5', // PDF version
@@ -25,8 +18,10 @@ var docDefinition = {
 };
 
 var now = new Date();
-var pdfDoc = printer.createPdfKitDocument(docDefinition);
-pdfDoc.pipe(fs.createWriteStream('pdfs/pdfa.pdf'));
-pdfDoc.end();
 
-console.log(new Date() - now);
+var pdf = pdfmake.createPdf(docDefinition);
+pdf.write('pdfs/pdfa.pdf').then(() => {
+	console.log(new Date() - now);
+}, err => {
+	console.error(err);
+});

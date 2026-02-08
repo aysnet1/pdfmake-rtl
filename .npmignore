@@ -4,37 +4,14 @@ dev-playground/
 docs/
 examples/
 tests/
-build/fonts/
+package-lock.json
 yarn.lock
-composer.json
-bower.json
-webpack.config.js
-webpack-standardfonts.config.js
 .editorconfig
+.typos.toml
 eslint.config.mjs
+build-fonts.js
 build-examples.js
+babel.config.json
+webpack.config.js
+src/3rd-party/svg-to-pdfkit/*.patch
 
-# RTL development files
-pure-auto-rtl.js
-pure-auto-rtl.pdf
-test-auto-rtl.js
-test-auto-rtl.pdf
-rtl-demo.js
-rtl-demo.pdf
-style-test.js
-style-test.pdf
-debug-rtl.js
-setup-rtl.sh
-rtl-config.json
-
-# Additional documentation
-ARCHITECTURE-RTL.md
-PACKAGE-SUMMARY.md
-README-RTL.md
-STYLES-RTL.md
-STYLES-SUMMARY.md
-
-# Development files
-test-package.js
-usage-example.js
-npm-scripts.json

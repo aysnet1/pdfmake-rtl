@@ -7,6 +7,13 @@ var pkg = require('./package.json');
 
 var banner = '/*! ' + pkg.name + ' v' + pkg.version + ', @license ' + pkg.license + ', @link ' + pkg.homepage + ' */';
 
+var supportedBrowsers = {
+	"chrome": "109",
+	"edge": "109",
+	"firefox": "102",
+	"safari": "14"
+};
+
 module.exports = {
 	mode: 'production',
 	entry: {
@@ -20,10 +27,9 @@ module.exports = {
 		// Workaround https://github.com/webpack/webpack/issues/6642 until https://github.com/webpack/webpack/issues/6525 lands.
 		globalObject: `typeof self !== 'undefined' ? self : this`
 	},
-	target: ['web', 'es5'], // For Internet Explorer 11 support
 	resolve: {
 		alias: {
-			fs: path.join(__dirname, './src/browser-extensions/virtual-fs.js')
+			fs: path.join(__dirname, './src/browser-extensions/virtual-fs-cjs.js')
 		},
 		fallback: {
 			crypto: false,
@@ -36,6 +42,29 @@ module.exports = {
 	},
 	module: {
 		rules: [
+			{
+				enforce: 'pre',
+				test: /\.js$/,
+				exclude: /node_modules/,
+				use: {
+					loader: 'babel-loader',
+					options: {
+						presets: [
+							[
+								"@babel/preset-env",
+								{
+									targets: supportedBrowsers,
+									modules: false,
+									useBuiltIns: 'usage',
+									// TODO: after fix in babel remove corejs version and remove core-js dependency in package.json
+									corejs: "3.0.0",
+									loose: true
+								}
+							]
+						]
+					}
+				}
+			},
 			// for fs don't use babel _interopDefault command
 			{
 				enforce: 'pre',
@@ -78,7 +107,7 @@ module.exports = {
 			},
 			{
 				test: /\.js$/,
-				include: /(layoutBuilder|pdfkit|linebreak|fontkit|saslprep|restructure|unicode-trie|unicode-properties|dfa|buffer|png-js|crypto-js)/,
+				include: /(pdfkit|linebreak|fontkit|saslprep|restructure|unicode-trie|unicode-properties|dfa|buffer|png-js|crypto-js)/,
 				use: {
 					loader: 'babel-loader',
 					options: {
@@ -86,9 +115,7 @@ module.exports = {
 							[
 								"@babel/preset-env",
 								{
-									targets: {
-										"ie": "11"
-									},
+									targets: supportedBrowsers,
 									modules: false,
 									useBuiltIns: 'usage',
 									// TODO: after fix in babel remove corejs version and remove core-js dependency in package.json
@@ -111,7 +138,6 @@ module.exports = {
 					},
 				}
 			},
-
 			/* temporary bugfix for FileSaver: added hack for mobile device support, see https://github.com/bpampuch/pdfmake/issues/1664 */
 			/* waiting to merge and release PR https://github.com/eligrey/FileSaver.js/pull/533 */
 			{
@@ -129,27 +155,6 @@ module.exports = {
 					})
 				}
 			},
-			{
-				enforce: 'post',
-				test: /fontkit[/\\]index.js$/,
-				use: {
-					loader: "transform-loader?brfs"
-				}
-			},
-			{
-				enforce: 'post',
-				test: /unicode-properties[/\\]index.js$/,
-				use: {
-					loader: "transform-loader?brfs"
-				}
-			},
-			{
-				enforce: 'post',
-				test: /linebreak[/\\]src[/\\]linebreaker.js/,
-				use: {
-					loader: "transform-loader?brfs"
-				}
-			}
 		]
 	},
 	optimization: {

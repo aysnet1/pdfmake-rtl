@@ -1,11 +1,10 @@
-'use strict';
-
 /**
  * RTL (Right-to-Left) utilities for handling Arabic, Persian (Farsi), and Urdu languages
+ * Production-ready module for pdfmake RTL support
  */
 
 // Unicode ranges for Arabic script (includes Persian and Urdu characters)
-var ARABIC_RANGE = [
+const ARABIC_RANGE = [
 	[0x0600, 0x06FF], // Arabic block
 	[0x0750, 0x077F], // Arabic Supplement
 	[0x08A0, 0x08FF], // Arabic Extended-A
@@ -14,7 +13,7 @@ var ARABIC_RANGE = [
 ];
 
 // Unicode ranges for Persian (Farsi) specific characters
-var PERSIAN_RANGE = [
+const PERSIAN_RANGE = [
 	[0x06A9, 0x06AF], // Persian Kaf, Gaf
 	[0x06C0, 0x06C3], // Persian Heh, Teh Marbuta variants
 	[0x06CC, 0x06CE], // Persian Yeh variants
@@ -23,7 +22,7 @@ var PERSIAN_RANGE = [
 ];
 
 // Unicode ranges for Urdu specific characters
-var URDU_RANGE = [
+const URDU_RANGE = [
 	[0x0679, 0x0679], // Urdu Tteh
 	[0x067E, 0x067E], // Urdu Peh
 	[0x0686, 0x0686], // Urdu Tcheh
@@ -40,10 +39,10 @@ var URDU_RANGE = [
 ];
 
 // Strong RTL characters (Arabic, Persian, Urdu)
-var RTL_CHARS = /[\u0600-\u06FF\u0750-\u077F\u08A0-\u08FF\uFB50-\uFDFF\uFE70-\uFEFF\u200C-\u200D]/;
+const RTL_CHARS = /[\u0600-\u06FF\u0750-\u077F\u08A0-\u08FF\uFB50-\uFDFF\uFE70-\uFEFF\u200C-\u200D]/;
 
 // Strong LTR characters (Latin, etc.)
-var LTR_CHARS = /[A-Za-z\u00C0-\u024F\u1E00-\u1EFF]/;
+const LTR_CHARS = /[A-Za-z\u00C0-\u024F\u1E00-\u1EFF]/;
 
 /**
  * Check if a character is in Arabic script (includes Persian and Urdu)
@@ -51,10 +50,8 @@ var LTR_CHARS = /[A-Za-z\u00C0-\u024F\u1E00-\u1EFF]/;
  * @returns {boolean} - True if character is Arabic/Persian/Urdu
  */
 function isArabicChar(char) {
-	var code = char.charCodeAt(0);
-	return ARABIC_RANGE.some(function (range) {
-		return code >= range[0] && code <= range[1];
-	});
+	const code = char.charCodeAt(0);
+	return ARABIC_RANGE.some(range => code >= range[0] && code <= range[1]);
 }
 
 /**
@@ -63,10 +60,8 @@ function isArabicChar(char) {
  * @returns {boolean} - True if character is Persian
  */
 function isPersianChar(char) {
-	var code = char.charCodeAt(0);
-	return PERSIAN_RANGE.some(function (range) {
-		return code >= range[0] && code <= range[1];
-	}) || isArabicChar(char); // Persian uses Arabic base + extensions
+	const code = char.charCodeAt(0);
+	return PERSIAN_RANGE.some(range => code >= range[0] && code <= range[1]) || isArabicChar(char);
 }
 
 /**
@@ -75,10 +70,8 @@ function isPersianChar(char) {
  * @returns {boolean} - True if character is Urdu
  */
 function isUrduChar(char) {
-	var code = char.charCodeAt(0);
-	return URDU_RANGE.some(function (range) {
-		return code >= range[0] && code <= range[1];
-	}) || isArabicChar(char); // Urdu uses Arabic base + extensions
+	const code = char.charCodeAt(0);
+	return URDU_RANGE.some(range => code >= range[0] && code <= range[1]) || isArabicChar(char);
 }
 
 /**
@@ -100,6 +93,18 @@ function isLTRChar(char) {
 }
 
 /**
+ * Check if text contains any RTL characters
+ * @param {string} text - Text to check
+ * @returns {boolean} - True if text contains RTL characters
+ */
+function containsRTL(text) {
+	if (!text || typeof text !== 'string') {
+		return false;
+	}
+	return RTL_CHARS.test(text);
+}
+
+/**
  * Determine the predominant text direction of a string
  * @param {string} text - Text to analyze
  * @returns {string} - 'rtl', 'ltr', or 'neutral'
@@ -109,11 +114,11 @@ function getTextDirection(text) {
 		return 'neutral';
 	}
 
-	var rtlCount = 0;
-	var ltrCount = 0;
+	let rtlCount = 0;
+	let ltrCount = 0;
 
-	for (var i = 0; i < text.length; i++) {
-		var char = text.charAt(i);
+	for (let i = 0; i < text.length; i++) {
+		const char = text.charAt(i);
 		if (isRTLChar(char)) {
 			rtlCount++;
 		} else if (isLTRChar(char)) {
@@ -135,363 +140,147 @@ function getTextDirection(text) {
 
 	return 'neutral';
 }
-/**
- * @param chars
- * @deprecated functionality moved to fixArabicTextUsingReplace
- */
-function getNormalizedChars(chars) {
-	return chars;
-}
 
+/**
+ * Fix bracket directionality for RTL text
+ * Only mirrors brackets that are in RTL context (adjacent to RTL characters)
+ * Brackets next to numbers or LTR text are preserved (e.g. "1)" stays as "1)")
+ * @param {string} text - Text to process
+ * @returns {string} - Text with contextually mirrored brackets
+ */
 function fixArabicTextUsingReplace(text) {
-	//if start with point remove
+	if (!text || typeof text !== 'string') {
+		return text;
+	}
+
+	// Remove leading dot if present
 	if (text.startsWith('.')) {
 		text = text.slice(1);
 	}
-	text = text
-		.replace(/\(/g, 'TEMP_OPEN_PAREN')
-		.replace(/\)/g, '(')
-		.replace(/TEMP_OPEN_PAREN/g, ')')
 
-		.replace(/\[/g, 'TEMP_OPEN_SQUARE')
-		.replace(/\]/g, '[')
-		.replace(/TEMP_OPEN_SQUARE/g, ']')
+	const DIGIT_OR_LTR = /[0-9A-Za-z\u00C0-\u024F\u1E00-\u1EFF]/;
+	const mirrorMap = { '(': ')', ')': '(', '[': ']', ']': '[', '{': '}', '}': '{', '<': '>', '>': '<' };
 
-		.replace(/\{/g, 'TEMP_OPEN_CURLY')
-		.replace(/\}/g, '{')
-		.replace(/TEMP_OPEN_CURLY/g, '}')
-
-		.replace(/</g, 'TEMP_OPEN_ANGLE')
-		.replace(/>/g, '<')
-		.replace(/TEMP_OPEN_ANGLE/g, '>');
-
-	return text;
-}
-
-/**
- * Check if text contains any RTL characters
- * @param {string} text - Text to check
- * @returns {boolean} - True if text contains RTL characters
- */
-function containsRTL(text) {
-	if (!text || typeof text !== 'string') {
-		return false;
-	}
-	return RTL_CHARS.test(text);
-}
-
-/**
- * Check if text is primarily Arabic, Persian, or Urdu
- * @param {string} text - Text to check
- * @returns {boolean} - True if text is primarily Arabic/Persian/Urdu
- */
-function isArabicText(text) {
-	if (!text || typeof text !== 'string') {
-		return false;
-	}
-
-	var rtlCount = 0;
-	var totalStrongChars = 0;
-
-	for (var i = 0; i < text.length; i++) {
-		var char = text.charAt(i);
-		if (isArabicChar(char) || isPersianChar(char) || isUrduChar(char)) {
-			rtlCount++;
-			totalStrongChars++;
-		} else if (isRTLChar(char) || isLTRChar(char)) {
-			totalStrongChars++;
-		}
-	}
-
-	// For mixed language text, require at least 30% RTL characters
-	// This prevents false positives while still detecting RTL content
-	return totalStrongChars > 0 && (rtlCount / totalStrongChars) >= 0.3;
-}
-
-/**
- * Process RTL text for proper display
- * For modern PDF libraries, we rely on the underlying engine for BiDi processing
- * We should NOT reverse word order manually - that breaks Arabic text
- * @param {string} text - Text to process
- * @returns {string} - Text (unchanged for proper BiDi handling)
- */
-function reverseRTLText(text) {
-	if (!text || typeof text !== 'string') {
-		return text;
-	}
-
-	// DO NOT reverse Arabic text word order!
-	// Arabic text should maintain its natural word order
-	// Only the display direction (alignment) should be RTL
-	// The PDF engine handles proper BiDi rendering
-	return text;
-}
-
-/**
- * Apply RTL processing to text if needed
- * @param {string} text - Original text
- * @param {string} direction - Explicit direction override ('rtl', 'ltr', or null)
- * @returns {object} - { text: processedText, isRTL: boolean }
- */
-function processRTLText(text, direction) {
-	if (!text || typeof text !== 'string' || getTextDirection(text) !== 'rtl') {
-		return { text: text, isRTL: false };
-	}
-
-	var isRTL = false;
-
-	if (direction === 'rtl') {
-		isRTL = true;
-	} else if (direction === 'ltr') {
-		isRTL = false;
-	} else {
-		// Auto-detect direction
-		var textDir = getTextDirection(text);
-		isRTL = textDir === 'rtl';
-	}
-
-	// Keep original text - no word reversal needed
-	// The PDF engine handles proper BiDi rendering
-	return {
-		text: text,
-		isRTL: isRTL
-	};
-}
-
-/**
- * Process mixed language text for better BiDi handling
- * @param {string} text - Text that may contain mixed RTL and LTR content
- * @returns {string} - Processed text with proper directionality markers
- */
-function processMixedLanguageText(text) {
-	if (!text || typeof text !== 'string') {
-		return text;
-	}
-
-	// Check if we have both RTL and LTR characters
-	var hasRTL = false;
-	var hasLTR = false;
-
-	for (var i = 0; i < text.length; i++) {
-		var char = text.charAt(i);
-		if (isRTLChar(char)) {
-			hasRTL = true;
-		} else if (isLTRChar(char)) {
-			hasLTR = true;
-		}
-
-		// Early exit if we found both
-		if (hasRTL && hasLTR) {
-			break;
-		}
-	}
-
-	// If we have mixed content, add BiDi control characters
-	if (hasRTL && hasLTR) {
-		// Add Right-to-Left Mark (RLM) before RTL segments
-		// Add Left-to-Right Mark (LRM) before LTR segments
-		var processed = '';
-		var currentDir = null;
-
-		for (var j = 0; j < text.length; j++) {
-			var currentChar = text.charAt(j);
-
-			if (isRTLChar(currentChar)) {
-				if (currentDir !== 'rtl') {
-					processed += '\u200F'; // RLM - Right-to-Left Mark
-					currentDir = 'rtl';
+	let result = '';
+	for (let i = 0; i < text.length; i++) {
+		const ch = text[i];
+		if (mirrorMap[ch] !== undefined) {
+			// Find the previous non-space character
+			let prevChar = null;
+			for (let j = i - 1; j >= 0; j--) {
+				if (text[j] !== ' ') {
+					prevChar = text[j];
+					break;
 				}
-				processed += currentChar;
-			} else if (isLTRChar(currentChar)) {
-				if (currentDir !== 'ltr') {
-					processed += '\u200E'; // LRM - Left-to-Right Mark
-					currentDir = 'ltr';
-				}
-				processed += currentChar;
-			} else {
-				// Neutral characters (numbers, punctuation, spaces)
-				processed += currentChar;
 			}
+			// Find the next non-space character
+			let nextChar = null;
+			for (let j = i + 1; j < text.length; j++) {
+				if (text[j] !== ' ') {
+					nextChar = text[j];
+					break;
+				}
+			}
+
+			// If previous char is a digit or LTR letter, bracket belongs to it — don't mirror
+			// e.g. "1)" or "a)" — the bracket is part of numbering
+			if (prevChar && DIGIT_OR_LTR.test(prevChar)) {
+				result += ch;
+			}
+			// If next char is a digit or LTR letter and no RTL before, don't mirror
+			// e.g. "(Hello"
+			else if (!prevChar && nextChar && DIGIT_OR_LTR.test(nextChar)) {
+				result += ch;
+			}
+			// Otherwise mirror — bracket is in RTL context
+			else {
+				result += mirrorMap[ch];
+			}
+		} else {
+			result += ch;
 		}
-
-		return processed;
 	}
 
-	// For non-mixed text, return as-is
-	return text;
+	return result;
 }
 
 /**
- * Reverse table row cells for RTL layout
- * @param {Array} row - Table row array
- * @returns {Array} - Reversed row array
+ * Apply RTL properties to a node
+ * @param {object} node - Document node
+ * @param {boolean} forceRTL - Force RTL regardless of content
+ * @returns {object} - Node with RTL properties applied
  */
-function reverseTableRow(row) {
-	if (!Array.isArray(row)) {
-		return row;
+function applyRTLToNode(node, forceRTL = false) {
+	if (!node || typeof node !== 'object') {
+		return node;
 	}
-	return row.slice().reverse();
+
+	// Determine if node should be RTL
+	let shouldBeRTL = forceRTL;
+
+	if (!forceRTL && node.text) {
+		const textStr = typeof node.text === 'string' ? node.text :
+			Array.isArray(node.text) ? node.text.join('') : '';
+		shouldBeRTL = getTextDirection(textStr) === 'rtl';
+	}
+
+	if (shouldBeRTL) {
+		// Set structural RTL properties (alignment, font)
+		// Text shaping (bracket mirroring) is handled at render time in ElementWriter
+		if (!node.alignment) {
+			node.alignment = 'right';
+		}
+		if (node.font === undefined && !node.font) {
+			node.font = 'Cairo'; // Default RTL font
+		}
+	}
+
+	return node;
 }
 
 /**
- * Process table for RTL layout if supportRTL is enabled
+ * Process table for RTL layout
  * @param {object} tableNode - Table definition object
+ * @param {boolean} forceRTL - Force RTL layout
  * @returns {object} - Processed table node
  */
-function processRTLTable(tableNode) {
-	if (!tableNode || !tableNode.table.supportRTL || !tableNode.table || !tableNode.table.body) {
-		return tableNode;
-	}
-
-	// Don't clone the entire object - just modify the table data in place
-	// Reverse each row in the table body for RTL layout
-	tableNode.table.body = tableNode.table.body.map(function (row) {
-		return reverseTableRow(row);
-	});
-
-	// Also reverse the widths array if it exists
-	if (tableNode.table.widths && Array.isArray(tableNode.table.widths)) {
-		tableNode.table.widths = tableNode.table.widths.slice().reverse();
-	}
-
-	return tableNode;
-}
-
-/**
- * Apply automatic RTL detection and formatting to any text element
- * @param {object | string} element - Text element or string
- * @returns {object} - Enhanced element with RTL properties
- */
-function autoApplyRTL(element) {
-	if (!element) return element;
-
-	// Handle string elements
-	if (typeof element === 'string') {
-		// Process mixed language text first
-		var processedText = processMixedLanguageText(element);
-		var direction = getTextDirection(processedText);
-		if (direction === 'rtl') {
-			return {
-				text: processedText,
-				alignment: 'right',
-				bidi: true
-			};
-		}
-		return processedText;
-	}
-
-	// Handle object elements
-	if (typeof element === 'object' && element.text) {
-		// Process mixed language text first
-		var processedText = processMixedLanguageText(element.text);
-		element.text = processedText;
-
-		var textDirection = getTextDirection(processedText);
-
-		if (textDirection === 'rtl') {
-			// Auto-apply RTL properties if not already set
-			if (!element.alignment) {
-				element.alignment = 'right';
-			}
-			if (element.bidi === undefined) {
-				element.bidi = true;
-			}
-		} else if (textDirection === 'ltr') {
-			// Auto-apply LTR properties if not already set
-			if (!element.alignment) {
-				element.alignment = 'left';
-			}
-
-		}
-	}
-
-	return element;
-}
-
-/**
- * Process list items for RTL support including bullet positioning
- * @param {Array | object} listItems - ul/ol content
- * @returns {Array | object} - Processed list with RTL support
- */
-function processRTLList(listItems) {
-	if (!listItems) return listItems;
-
-	function processListItem(item) {
-		if (typeof item === 'string') {
-			var direction = getTextDirection(item);
-			if (direction === 'rtl') {
-				return {
-					text: item,
-					alignment: 'right',
-					markerColor: '#2c5282'
-				};
-			}
-			return item;
-		}
-
-		if (typeof item === 'object') {
-			// Process the main text
-			if (item.text) {
-				var textDirection = getTextDirection(item.text);
-				if (textDirection === 'rtl') {
-					if (!item.alignment) item.alignment = 'right';
-					if (!item.markerColor) item.markerColor = '#2c5282';
-				}
-			}
-
-			// Process nested ul/ol recursively
-			if (item.ul) {
-				item.ul = processRTLList(item.ul);
-			}
-			if (item.ol) {
-				item.ol = processRTLList(item.ol);
-			}
-		}
-
-		return item;
-	}
-
-	if (Array.isArray(listItems)) {
-		return listItems.map(processListItem);
-	}
-
-	return processListItem(listItems);
-}
-
-/**
- * Process table for automatic RTL detection and layout
- * @param {object} tableNode - Table definition object
- * @returns {object} - Processed table node
- */
-function processAutoRTLTable(tableNode) {
+function processRTLTable(tableNode, forceRTL = false) {
 	if (!tableNode || !tableNode.table || !tableNode.table.body) {
 		return tableNode;
 	}
 
-	// Check if table contains RTL content
-	var hasRTLContent = false;
-	var rtlCellCount = 0;
-	var totalCells = 0;
+	// Determine if table should be RTL
+	let shouldBeRTL = forceRTL;
 
-	tableNode.table.body.forEach(function (row) {
-		if (Array.isArray(row)) {
-			row.forEach(function (cell) {
-				totalCells++;
-				var cellText = typeof cell === 'string' ? cell : (cell && cell.text ? cell.text : '');
-				if (containsRTL(cellText)) {
-					rtlCellCount++;
-				}
-			});
-		}
-	});
+	if (!forceRTL) {
+		// Auto-detect based on content
+		let rtlCellCount = 0;
+		let totalCells = 0;
 
-	// If more than 30% of cells contain RTL content, treat as RTL table
-	hasRTLContent = totalCells > 0 && (rtlCellCount / totalCells) >= 0.3;
+		tableNode.table.body.forEach(row => {
+			if (Array.isArray(row)) {
+				row.forEach(cell => {
+					totalCells++;
+					const cellText = typeof cell === 'string' ? cell :
+						(cell && cell.text ? (typeof cell.text === 'string' ? cell.text : String(cell.text)) : '');
+					if (containsRTL(cellText)) {
+						rtlCellCount++;
+					}
+				});
+			}
+		});
 
-	if (hasRTLContent || tableNode.table.supportRTL) {
+		// If more than 30% of cells contain RTL content, treat as RTL table
+		shouldBeRTL = totalCells > 0 && (rtlCellCount / totalCells) >= 0.3;
+	}
+
+	if (shouldBeRTL) {
 		// Reverse table columns for RTL layout
-		tableNode.table.body = tableNode.table.body.map(function (row) {
-			return reverseTableRow(row);
+		tableNode.table.body = tableNode.table.body.map(row => {
+			if (Array.isArray(row)) {
+				return row.slice().reverse();
+			}
+			return row;
 		});
 
 		// Reverse widths if defined
@@ -499,21 +288,21 @@ function processAutoRTLTable(tableNode) {
 			tableNode.table.widths = tableNode.table.widths.slice().reverse();
 		}
 
-		// Auto-apply RTL styles to cells
-		tableNode.table.body = tableNode.table.body.map(function (row) {
+		// Apply RTL properties to cells (skip empty span placeholders)
+		tableNode.table.body = tableNode.table.body.map(row => {
 			if (Array.isArray(row)) {
-				return row.map(function (cell) {
-					return autoApplyRTL(cell);
-				});
-			}
-			return row;
-		});
-	} else {
-		// For non-RTL tables, still auto-apply font and alignment per cell
-		tableNode.table.body = tableNode.table.body.map(function (row) {
-			if (Array.isArray(row)) {
-				return row.map(function (cell) {
-					return autoApplyRTL(cell);
+				return row.map(cell => {
+					// Convert string cells to objects so we can set font
+					if (typeof cell === 'string') {
+						return { text: cell, alignment: 'right', font: 'Cairo' };
+					}
+					// Skip null/undefined
+					if (!cell || typeof cell !== 'object') return cell;
+					// Skip empty span placeholders {} — they must stay empty for colSpan/rowSpan
+					if (Object.keys(cell).length === 0) return cell;
+					// Skip cells that are only span markers (e.g. {_span: true})
+					if (cell._span) return cell;
+					return applyRTLToNode(cell, true);
 				});
 			}
 			return row;
@@ -524,115 +313,126 @@ function processAutoRTLTable(tableNode) {
 }
 
 /**
- * Process any document element for automatic RTL detection
- * @param {object | Array | string} element - Document element
- * @returns {object | Array | string} - Processed element
+ * Process list items for RTL support
+ * @param {Array} listItems - ul/ol content
+ * @param {boolean} forceRTL - Force RTL layout
+ * @returns {Array} - Processed list
  */
-function processAutoRTLElement(element) {
-	if (!element) return element;
+function processRTLList(listItems, forceRTL = false) {
+	if (!listItems || !Array.isArray(listItems)) {
+		return listItems;
+	}
 
-	// Handle arrays (like content arrays)
+	return listItems.map(item => {
+		if (typeof item === 'string') {
+			const shouldBeRTL = forceRTL || getTextDirection(item) === 'rtl';
+			if (shouldBeRTL) {
+				return {
+					text: item,
+					alignment: 'right',
+					font: 'Cairo'
+				};
+			}
+			return item;
+		}
+
+		if (typeof item === 'object') {
+			const shouldBeRTL = forceRTL || (item.text && getTextDirection(String(item.text)) === 'rtl');
+
+			if (shouldBeRTL) {
+				item = applyRTLToNode(item, true);
+			}
+
+			// Process nested lists recursively
+			if (item.ul) {
+				item.ul = processRTLList(item.ul, forceRTL);
+			}
+			if (item.ol) {
+				item.ol = processRTLList(item.ol, forceRTL);
+			}
+		}
+
+		return item;
+	});
+}
+
+/**
+ * Process document element for RTL support
+ * @param {any} element - Document element
+ * @param {boolean} forceRTL - Force RTL layout
+ * @returns {any} - Processed element
+ */
+function processRTLElement(element, forceRTL = false) {
+	if (!element) {
+		return element;
+	}
+
+	// Handle arrays
 	if (Array.isArray(element)) {
-		return element.map(processAutoRTLElement);
+		return element.map(item => processRTLElement(item, forceRTL));
 	}
 
-	// Handle text elements
-	if (typeof element === 'string' || (element && element.text)) {
-		element = autoApplyRTL(element);
+	// Handle strings
+	if (typeof element === 'string') {
+		const shouldBeRTL = forceRTL || getTextDirection(element) === 'rtl';
+		if (shouldBeRTL) {
+			return {
+				text: element,
+				alignment: 'right',
+				font: 'Cairo'
+			};
+		}
+		return element;
 	}
 
-	// Handle tables
-	if (element && element.table) {
-		element = processAutoRTLTable(element);
-	}
+	// Handle objects
+	if (typeof element === 'object') {
+		// Check for explicit rtl property
+		const elementForceRTL = element.rtl === true || forceRTL;
 
-	// Handle lists
-	if (element && element.ul) {
-		element.ul = processRTLList(element.ul);
-	}
-	if (element && element.ol) {
-		element.ol = processRTLList(element.ol);
-	}
+		// Process text nodes
+		if (element.text !== undefined) {
+			element = applyRTLToNode(element, elementForceRTL);
+		}
 
-	// Handle columns
-	if (element && element.columns && Array.isArray(element.columns)) {
-		element.columns = element.columns.map(processAutoRTLElement);
+		// Process tables
+		if (element.table) {
+			element = processRTLTable(element, elementForceRTL);
+		}
+
+		// Process lists
+		if (element.ul) {
+			element.ul = processRTLList(element.ul, elementForceRTL);
+		}
+		if (element.ol) {
+			element.ol = processRTLList(element.ol, elementForceRTL);
+		}
+
+		// Process columns
+		if (element.columns && Array.isArray(element.columns)) {
+			element.columns = element.columns.map(col => processRTLElement(col, elementForceRTL));
+		}
+
+		// Process stack
+		if (element.stack && Array.isArray(element.stack)) {
+			element.stack = element.stack.map(item => processRTLElement(item, elementForceRTL));
+		}
 	}
 
 	return element;
 }
 
-<<<<<<< HEAD
-
-
-=======
-function fixArabicTextUsingReplace(text) {
-	//if start with point remove
-	if (text.startsWith('.')) {
-		text = text.slice(1);
-	}
-
-	if (!containsRTL(text))
-		return text;
-
-	text = text
-		.replace(/\(/g, 'TEMP_OPEN_PAREN')
-		.replace(/\)/g, '(')
-		.replace(/TEMP_OPEN_PAREN/g, ')')
-
-		.replace(/\[/g, 'TEMP_OPEN_SQUARE')
-		.replace(/\]/g, '[')
-		.replace(/TEMP_OPEN_SQUARE/g, ']')
-
-		.replace(/\{/g, 'TEMP_OPEN_CURLY')
-		.replace(/\}/g, '{')
-		.replace(/TEMP_OPEN_CURLY/g, '}')
-
-		.replace(/</g, 'TEMP_OPEN_ANGLE')
-		.replace(/>/g, '<')
-		.replace(/TEMP_OPEN_ANGLE/g, '>');
-
-	return text;
-}
-
-/*
- * Reverse a table row while preserving colSpan group semantics.
- * This function correctly handles colSpan by keeping the span cell at the start
-	* of its group after reversal, maintaining proper header alignment.
- *
- * @param { Array } row - The original row array(cells may include colSpan / rowSpan).
- * @returns { Array } - A new row array reversed for RTL with correct colSpan placement.
- */
-function reverseTableRowPreserveSpans(row) {
-	if (!Array.isArray(row)) return row;
-
-	var n = row.length;
-	if (n === 0) return row;
-
-	// For simple reversal that maintains colSpan structure:
-	// Just reverse the array, but this works better with how pdfmake handles spans
-	return row.slice().reverse();
-
-}
->>>>>>> dca2edc593e83277752000d1b29f17872f0ce410
-module.exports = {
-	isArabicChar: isArabicChar,
-	isPersianChar: isPersianChar,
-	isUrduChar: isUrduChar,
-	isRTLChar: isRTLChar,
-	isLTRChar: isLTRChar,
-	getTextDirection: getTextDirection,
-	containsRTL: containsRTL,
-	isArabicText: isArabicText,
-	reverseRTLText: reverseRTLText,
-	processRTLText: processRTLText,
-	reverseTableRow: reverseTableRow,
-	processRTLTable: processRTLTable,
-	autoApplyRTL: autoApplyRTL,
-	processRTLList: processRTLList,
-	processAutoRTLTable: processAutoRTLTable,
-	processAutoRTLElement: processAutoRTLElement,
-	fixArabicTextUsingReplace: fixArabicTextUsingReplace,
-	getNormalizedChars: getNormalizedChars,
-	processMixedLanguageText: processMixedLanguageText
+export {
+	isArabicChar,
+	isPersianChar,
+	isUrduChar,
+	isRTLChar,
+	isLTRChar,
+	containsRTL,
+	getTextDirection,
+	fixArabicTextUsingReplace,
+	applyRTLToNode,
+	processRTLTable,
+	processRTLList,
+	processRTLElement
 };

@@ -23,26 +23,26 @@ var docDefinition = {
 	// Document content
 	content: [
 		// Header
-		{ 
-			text: 'Arabic RTL Support Demo', 
+		{
+			text: 'Arabic RTL Support Demo',
 			style: 'header',
 			alignment: 'center',
 			margin: [0, 0, 0, 20]
 		},
-		
+
 		// LTR Text (English)
 		{
 			text: 'Left-to-Right (English) text: This is normal English text that flows from left to right.',
 			margin: [0, 0, 0, 10]
 		},
-		
+
 		// RTL Text (Arabic) with supportRTL enabled
 		{
 			text: 'مرحبا بكم في نظام الكتابة من اليمين إلى اليسار. هذا نص عربي يجب أن يظهر من اليمين إلى اليسار.',
 			supportRTL: true,
 			margin: [0, 0, 0, 10]
 		},
-		
+
 		// Mixed text with explicit direction
 		{
 			text: [
@@ -52,14 +52,14 @@ var docDefinition = {
 `],
 			margin: [0, 0, 0, 10]
 		},
-		
+
 		// Long Arabic text to test line breaking
 		{
 			text: 'هذا نص عربي طويل جداً يهدف إلى اختبار كسر الأسطر في النصوص العربية. يجب أن ينكسر النص بشكل صحيح من النهاية وليس من البداية. هذا مهم جداً للقراءة الصحيحة للنص العربي. النص العربي يجب أن يتدفق من اليمين إلى اليسار وأن ينكسر بشكل طبيعي.',
 			supportRTL: true,
 			margin: [0, 0, 0, 20]
 		},
-		
+
 		// Table with AUTO RTL support (columns will be automatically reversed)
 		{
 			text: 'Table with AUTO RTL Support (columns automatically reversed):',
@@ -69,7 +69,7 @@ var docDefinition = {
 		{
 			table: {
 				headerRows: 1,
-				widths: ['33%', '33%', '34%'], 
+				widths: ['33%', '33%', '34%'],
 				body: [
 					// Header row - Normal order (will be auto-reversed by supportRTL)
 					[
@@ -79,30 +79,30 @@ var docDefinition = {
 					],
 					// First data row - Normal order (will be auto-reversed by supportRTL)
 					[
-						{ 
+						{
 							text: 'هذا نص عربي طويل يمثل محتوى الخلية الأولى في الصف الأول من الجدول.',
 							supportRTL: true
 						},
-						{ 
+						{
 							text: 'هذا نص طويل باللغة العربية يمثل محتوى الخلية الثانية لتجربة العرض.',
 							supportRTL: true
 						},
-						{ 
+						{
 							text: 'هذه الجملة الطويلة مكتوبة لتوضيح كيفية التعامل مع النصوص الطويلة داخل الخلايا.',
 							supportRTL: true
 						}
 					],
 					// Second data row - Normal order (will be auto-reversed by supportRTL)
 					[
-						{ 
+						{
 							text: 'النص هنا يحتوي على عدد كبير من الكلمات للتأكد من أن التفاف النص يعمل بشكل صحيح.',
 							supportRTL: true
 						},
-						{ 
+						{
 							text: 'نقوم بإضافة جمل متعددة داخل الخلية للتأكد من التنسيق الصحيح في المستند.',
 							supportRTL: true
 						},
-						{ 
+						{
 							text: 'يجب أن يتم عرض هذا النص بشكل سليم عند توليد ملف PDF يدعم اللغة العربية.',
 							supportRTL: true
 						}
@@ -111,13 +111,13 @@ var docDefinition = {
 			},
 			supportRTL: true, // Enable AUTO RTL - columns will be automatically reversed
 			layout: {
-				fillColor: function (rowIndex, node, columnIndex) {
+				fillColor: function (rowIndex) {
 					return (rowIndex === 0) ? '#CCCCCC' : null;
 				}
 			},
 			margin: [0, 0, 0, 20]
 		},
-		
+
 		// Right-aligned English text for comparison
 		{
 			text: 'This is English text aligned to the right (for comparison with Arabic):',
@@ -128,7 +128,7 @@ var docDefinition = {
 			alignment: 'right',
 			margin: [0, 0, 0, 10]
 		},
-		
+
 		// True RTL Arabic text
 		{
 			text: 'هذا نص عربي حقيقي من اليمين إلى اليسار:',
@@ -141,7 +141,7 @@ var docDefinition = {
 			margin: [0, 0, 0, 20]
 		}
 	],
-	
+
 	// Styles
 	styles: {
 		header: {
@@ -159,7 +159,7 @@ var docDefinition = {
 			fillColor: '#CCCCCC'
 		}
 	},
-	
+
 	// Default style
 	defaultStyle: {
 		fontSize: 12,

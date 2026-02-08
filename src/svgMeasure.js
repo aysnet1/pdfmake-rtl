@@ -1,76 +1,109 @@
-'use strict';
-
-var xmldoc = require('xmldoc');
+import { XmlDocument } from "xmldoc";
+import { isString } from './helpers/variableType';
 
 /**
  * Strip unit postfix, parse number, but return undefined instead of NaN for bad input
- * @param textVal
+ *
+ * @param {string} textVal
+ * @returns {?number}
  */
-function stripUnits(textVal) {
-	var n = parseFloat(textVal);
+const stripUnits = textVal => {
+	let n = parseFloat(textVal);
 	if (typeof n !== 'number' || isNaN(n)) {
 		return undefined;
 	}
 	return n;
-}
+};
 
 /**
- * Make sure it's valid XML and the root tage is <svg/>, returns xmldoc DOM
- * @param svgString
+ * Make sure it's valid XML and the root tag is <svg/>, returns xmldoc DOM
+ *
+ * @param {string} svgString
+ * @returns {object}
  */
-function parseSVG(svgString) {
-	var doc;
+const parseSVG = (svgString) => {
+	let doc;
 
 	try {
-		doc = new xmldoc.XmlDocument(svgString);
+		doc = new XmlDocument(svgString);
 	} catch (err) {
-		throw new Error('SVGMeasure: ' + err);
+		throw new Error('Invalid svg document (' + err + ')');
 	}
 
 	if (doc.name !== "svg") {
-		throw new Error('SVGMeasure: expected <svg> document');
+		throw new Error('Invalid svg document (expected <svg>)');
 	}
 
 	return doc;
-}
+};
 
-function SVGMeasure() {
-}
+class SVGMeasure {
+	constructor() {
 
-SVGMeasure.prototype.measureSVG = function (svgString) {
-
-	var doc = parseSVG(svgString);
-
-	var docWidth = stripUnits(doc.attr.width);
-	var docHeight = stripUnits(doc.attr.height);
-
-	if ((docWidth == undefined || docHeight == undefined) && typeof doc.attr.viewBox == 'string') {
-		var viewBoxParts = doc.attr.viewBox.split(/[,\s]+/);
-		if (viewBoxParts.length !== 4) {
-			throw new Error("Unexpected svg viewbox format, should have 4 entries but found: '" + doc.attr.viewBox + "'");
-		}
-		if (docWidth == undefined) {
-			docWidth = stripUnits(viewBoxParts[2]);
-		}
-		if (docHeight == undefined) {
-			docHeight = stripUnits(viewBoxParts[3]);
-		}
 	}
 
-	return {
-		width: docWidth,
-		height: docHeight
-	};
-};
+	measureSVG(svg) {
+		let width, height, viewBox;
 
-SVGMeasure.prototype.writeDimensions = function (svgString, dimensions) {
+		if (isString(svg)) {
+			let doc = parseSVG(svg);
 
-	var doc = parseSVG(svgString);
+			width = doc.attr.width;
+			height = doc.attr.height;
+			viewBox = doc.attr.viewBox;
+		} else if (typeof SVGElement !== 'undefined' && svg instanceof SVGElement && typeof getComputedStyle === 'function') {
+			width = svg.getAttribute("width");
+			height = svg.getAttribute("height");
+			viewBox = svg.getAttribute("viewBox");
+		} else {
+			throw new Error('Invalid SVG document');
+		}
 
-	doc.attr.width = "" + dimensions.width;
-	doc.attr.height = "" + dimensions.height;
+		let docWidth = stripUnits(width);
+		let docHeight = stripUnits(height);
 
-	return doc.toString();
-};
+		if ((docWidth === undefined || docHeight === undefined) && typeof viewBox === 'string') {
+			let viewBoxParts = viewBox.split(/[,\s]+/);
+			if (viewBoxParts.length !== 4) {
+				throw new Error("Unexpected svg viewBox format, should have 4 entries but found: '" + viewBox + "'");
+			}
+			if (docWidth === undefined) {
+				docWidth = stripUnits(viewBoxParts[2]);
+			}
+			if (docHeight === undefined) {
+				docHeight = stripUnits(viewBoxParts[3]);
+			}
+		}
 
-module.exports = SVGMeasure;
+		return {
+			width: docWidth,
+			height: docHeight
+		};
+	}
+
+	writeDimensions(svg, dimensions) {
+		if (isString(svg)) {
+			let doc = parseSVG(svg);
+
+			if (typeof doc.attr.viewBox !== 'string') {
+				doc.attr.viewBox = `0 0 ${stripUnits(doc.attr.width)} ${stripUnits(doc.attr.height)}`;
+			}
+
+			doc.attr.width = "" + dimensions.width;
+			doc.attr.height = "" + dimensions.height;
+
+			return doc.toString();
+		}
+
+		if (!svg.hasAttribute('viewBox')) {
+			svg.setAttribute('viewBox', `0 0 ${stripUnits(svg.getAttribute('width'))} ${stripUnits(svg.getAttribute('height'))}`);
+		}
+
+		svg.setAttribute('width', "" + dimensions.width);
+		svg.setAttribute('height', "" + dimensions.height);
+
+		return svg;
+	}
+}
+
+export default SVGMeasure;

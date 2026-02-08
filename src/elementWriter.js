@@ -1,22 +1,520 @@
-'use strict';
-
-var Line = require('./line');
-var isNumber = require('./helpers').isNumber;
-var pack = require('./helpers').pack;
-var offsetVector = require('./helpers').offsetVector;
-var DocumentContext = require('./documentContext');
-const rtlUtils = require('./rtlUtils');
+import { isNumber } from './helpers/variableType';
+import { pack, offsetVector } from './helpers/tools';
+import DocumentContext from './DocumentContext';
+import { EventEmitter } from 'events';
+import { containsRTL, fixArabicTextUsingReplace } from './rtlUtils';
 
 /**
- * Creates an instance of ElementWriter - a line/vector writer, which adds
- * elements to current page and sets their positions based on the context
- * @param context
- * @param tracker
+ * A line/vector writer, which adds elements to current page and sets
+ * their positions based on the context
  */
-function ElementWriter(context, tracker) {
-	this.context = context;
-	this.contextStack = [];
-	this.tracker = tracker;
+class ElementWriter extends EventEmitter {
+
+	/**
+	 * @param {DocumentContext} context
+	 */
+	constructor(context) {
+		super();
+		this._context = context;
+		this.contextStack = [];
+	}
+
+	/**
+	 * @returns {DocumentContext}
+	 */
+	context() {
+		return this._context;
+	}
+
+	addLine(line, dontUpdateContextPosition, index) {
+		let height = line.getHeight();
+		let context = this.context();
+		let page = context.getCurrentPage();
+		let position = this.getCurrentPositionOnPage();
+
+		if (context.availableHeight < height || !page) {
+			return false;
+		}
+
+		line.x = context.x + (line.x || 0);
+		line.y = context.y + (line.y || 0);
+
+		this.alignLine(line);
+
+		addPageItem(page, {
+			type: 'line',
+			item: line
+		}, index);
+		this.emit('lineAdded', line);
+
+		if (!dontUpdateContextPosition) {
+			context.moveDown(height);
+		}
+
+		return position;
+	}
+
+	alignLine(line) {
+		let width = this.context().availableWidth;
+		let lineWidth = line.getWidth();
+
+		let alignment = line.inlines && line.inlines.length > 0 && line.inlines[0].alignment;
+		let isRTL = line.isRTL && line.isRTL();
+
+		let offset = 0;
+
+		// For RTL lines, apply special handling
+		if (isRTL) {
+			if (!alignment || alignment === 'left') {
+				alignment = 'right';
+			}
+			this.adjustRTLInlines(line, width);
+		}
+
+		switch (alignment) {
+			case 'right':
+				offset = width - lineWidth;
+				break;
+			case 'center':
+				offset = (width - lineWidth) / 2;
+				break;
+		}
+
+		if (offset) {
+			line.x = (line.x || 0) + offset;
+		}
+
+		if (alignment === 'justify' &&
+			!line.newLineForced &&
+			!line.lastLineInParagraph &&
+			line.inlines.length > 1) {
+			let additionalSpacing = (width - lineWidth) / (line.inlines.length - 1);
+
+			for (let i = 1, l = line.inlines.length; i < l; i++) {
+				offset = i * additionalSpacing;
+
+				line.inlines[i].x += offset;
+				line.inlines[i].justifyShift = additionalSpacing;
+			}
+		}
+	}
+
+	/**
+	 * Adjust RTL inline positioning - reorder inlines for proper visual display
+	 * @param {object} line - Line containing RTL text
+	 */
+	adjustRTLInlines(line) {
+		if (!line.inlines || line.inlines.length === 0) {
+			return;
+		}
+
+		let rtlInlines = [];
+		let ltrInlines = [];
+
+		// Separate RTL, LTR, and neutral inlines using Sticky Direction
+		const LTR_REGEX = /[A-Za-z\u00C0-\u024F\u1E00-\u1EFF]/;
+		let currentDir = 'rtl'; // Default to RTL since this is an RTL line
+
+		line.inlines.forEach(inline => {
+			let hasStrongLTR = LTR_REGEX.test(inline.text);
+			let hasStrongRTL = containsRTL(inline.text);
+
+			if (hasStrongLTR && !hasStrongRTL) {
+				currentDir = 'ltr';
+				ltrInlines.push(inline);
+			} else if (hasStrongRTL && !hasStrongLTR) {
+				currentDir = 'rtl';
+				rtlInlines.push(inline);
+			} else if (hasStrongLTR && hasStrongRTL) {
+				currentDir = 'rtl';
+				rtlInlines.push(inline);
+			} else {
+				// Neutral - adopt direction of preceding content
+				if (currentDir === 'ltr') {
+					ltrInlines.push(inline);
+				} else {
+					rtlInlines.push(inline);
+				}
+			}
+		});
+
+		if (rtlInlines.length > 0) {
+			// Reverse RTL inlines for proper visual order
+			rtlInlines = reverseWords(rtlInlines);
+
+			let currentX = 0;
+			let reorderedInlines = [];
+
+			// Add LTR inlines first
+			ltrInlines.forEach(inline => {
+				inline.x = currentX;
+				currentX += inline.width;
+				reorderedInlines.push(inline);
+			});
+
+			// Add RTL inlines with bracket mirroring
+			const NUMBER_PUNCTUATION_REGEX = /^(\d+)([.:/\-)(]+)(\s*)$/;
+
+			rtlInlines.forEach(inline => {
+				// Apply context-aware bracket mirroring for inlines with RTL characters
+				if (containsRTL(inline.text)) {
+					inline.text = fixArabicTextUsingReplace(inline.text);
+				}
+
+				// Fix number+punctuation rendering in RTL
+				if (NUMBER_PUNCTUATION_REGEX.test(inline.text)) {
+					inline.text = inline.text.replace(NUMBER_PUNCTUATION_REGEX, ' $3$2$1');
+				}
+
+				inline.x = currentX;
+				currentX += inline.width;
+				reorderedInlines.push(inline);
+			});
+
+			line.inlines = reorderedInlines;
+		}
+	}
+
+	addImage(image, index) {
+		let context = this.context();
+		let page = context.getCurrentPage();
+		let position = this.getCurrentPositionOnPage();
+
+		if (!page || (image.absolutePosition === undefined && context.availableHeight < image._height && page.items.length > 0)) {
+			return false;
+		}
+
+		if (image._x === undefined) {
+			image._x = image.x || 0;
+		}
+
+		image.x = context.x + image._x;
+		image.y = context.y;
+
+		this.alignImage(image);
+
+		addPageItem(page, {
+			type: 'image',
+			item: image
+		}, index);
+
+		context.moveDown(image._height);
+
+		return position;
+	}
+
+	addCanvas(node, index) {
+		let context = this.context();
+		let page = context.getCurrentPage();
+		let positions = [];
+		let height = node._minHeight;
+
+		if (!page || (node.absolutePosition === undefined && context.availableHeight < height)) {
+			// TODO: support for canvas larger than a page
+			// TODO: support for other overflow methods
+
+			return false;
+		}
+
+		this.alignCanvas(node);
+
+		node.canvas.forEach(function (vector) {
+			let position = this.addVector(vector, false, false, index);
+			positions.push(position);
+			if (index !== undefined) {
+				index++;
+			}
+		}, this);
+
+		context.moveDown(height);
+
+		return positions;
+	}
+
+	addSVG(image, index) {
+		// TODO: same as addImage
+		let context = this.context();
+		let page = context.getCurrentPage();
+		let position = this.getCurrentPositionOnPage();
+
+		if (!page || (image.absolutePosition === undefined && context.availableHeight < image._height && page.items.length > 0)) {
+			return false;
+		}
+
+		if (image._x === undefined) {
+			image._x = image.x || 0;
+		}
+
+		image.x = context.x + image._x;
+		image.y = context.y;
+
+		this.alignImage(image);
+
+		addPageItem(page, {
+			type: 'svg',
+			item: image
+		}, index);
+
+		context.moveDown(image._height);
+
+		return position;
+	}
+
+	addQr(qr, index) {
+		let context = this.context();
+		let page = context.getCurrentPage();
+		let position = this.getCurrentPositionOnPage();
+
+		if (!page || (qr.absolutePosition === undefined && context.availableHeight < qr._height)) {
+			return false;
+		}
+
+		if (qr._x === undefined) {
+			qr._x = qr.x || 0;
+		}
+
+		qr.x = context.x + qr._x;
+		qr.y = context.y;
+
+		this.alignImage(qr);
+
+		for (let i = 0, l = qr._canvas.length; i < l; i++) {
+			let vector = qr._canvas[i];
+			vector.x += qr.x;
+			vector.y += qr.y;
+			this.addVector(vector, true, true, index);
+		}
+
+		context.moveDown(qr._height);
+
+		return position;
+	}
+
+	addAttachment(attachment, index) {
+		let context = this.context();
+		let page = context.getCurrentPage();
+		let position = this.getCurrentPositionOnPage();
+
+		if (!page || (attachment.absolutePosition === undefined && context.availableHeight < attachment._height && page.items.length > 0)) {
+			return false;
+		}
+
+		if (attachment._x === undefined) {
+			attachment._x = attachment.x || 0;
+		}
+
+		attachment.x = context.x + attachment._x;
+		attachment.y = context.y;
+
+		addPageItem(page, {
+			type: 'attachment',
+			item: attachment
+		}, index);
+
+		context.moveDown(attachment._height);
+
+		return position;
+	}
+
+	alignImage(image) {
+		let width = this.context().availableWidth;
+		let imageWidth = image._minWidth;
+		let offset = 0;
+		switch (image._alignment) {
+			case 'right':
+				offset = width - imageWidth;
+				break;
+			case 'center':
+				offset = (width - imageWidth) / 2;
+				break;
+		}
+
+		if (offset) {
+			image.x = (image.x || 0) + offset;
+		}
+	}
+
+	alignCanvas(node) {
+		let width = this.context().availableWidth;
+		let canvasWidth = node._minWidth;
+		let offset = 0;
+		switch (node._alignment) {
+			case 'right':
+				offset = width - canvasWidth;
+				break;
+			case 'center':
+				offset = (width - canvasWidth) / 2;
+				break;
+		}
+		if (offset) {
+			node.canvas.forEach(vector => {
+				offsetVector(vector, offset, 0);
+			});
+		}
+	}
+
+	addVector(vector, ignoreContextX, ignoreContextY, index, forcePage) {
+		let context = this.context();
+		let page = context.getCurrentPage();
+		if (isNumber(forcePage)) {
+			page = context.pages[forcePage];
+		}
+		let position = this.getCurrentPositionOnPage();
+
+		if (page) {
+			offsetVector(vector, ignoreContextX ? 0 : context.x, ignoreContextY ? 0 : context.y);
+			addPageItem(page, {
+				type: 'vector',
+				item: vector
+			}, index);
+			return position;
+		}
+	}
+
+	beginClip(width, height) {
+		let ctx = this.context();
+		let page = ctx.getCurrentPage();
+		page.items.push({
+			type: 'beginClip',
+			item: { x: ctx.x, y: ctx.y, width: width, height: height }
+		});
+		return true;
+	}
+
+	endClip() {
+		let ctx = this.context();
+		let page = ctx.getCurrentPage();
+		page.items.push({
+			type: 'endClip'
+		});
+		return true;
+	}
+
+	beginVerticalAlignment(verticalAlignment) {
+		let page = this.context().getCurrentPage();
+		let item = {
+			type: 'beginVerticalAlignment',
+			item: { verticalAlignment: verticalAlignment }
+		};
+		page.items.push(item);
+		return item;
+	}
+
+	endVerticalAlignment(verticalAlignment) {
+		let page = this.context().getCurrentPage();
+		let item = {
+			type: 'endVerticalAlignment',
+			item: { verticalAlignment: verticalAlignment }
+		};
+		page.items.push(item);
+		return item;
+	}
+
+	addFragment(block, useBlockXOffset, useBlockYOffset, dontUpdateContextPosition) {
+		let ctx = this.context();
+		let page = ctx.getCurrentPage();
+
+		if (!useBlockXOffset && block.height > ctx.availableHeight) {
+			return false;
+		}
+
+		block.items.forEach(item => {
+			switch (item.type) {
+				case 'line':
+					var l = item.item.clone();
+
+					if (l._node) {
+						l._node.positions[0].pageNumber = ctx.page + 1;
+					}
+					l.x = (l.x || 0) + (useBlockXOffset ? (block.xOffset || 0) : ctx.x);
+					l.y = (l.y || 0) + (useBlockYOffset ? (block.yOffset || 0) : ctx.y);
+
+					page.items.push({
+						type: 'line',
+						item: l
+					});
+					break;
+
+				case 'vector':
+					var v = pack(item.item);
+
+					offsetVector(v, useBlockXOffset ? (block.xOffset || 0) : ctx.x, useBlockYOffset ? (block.yOffset || 0) : ctx.y);
+					if (v._isFillColorFromUnbreakable) {
+						// If the item is a fillColor from an unbreakable block
+						// We have to add it at the beginning of the items body array of the page
+						delete v._isFillColorFromUnbreakable;
+						const endOfBackgroundItemsIndex = ctx.backgroundLength[ctx.page];
+						page.items.splice(endOfBackgroundItemsIndex, 0, {
+							type: 'vector',
+							item: v
+						});
+					} else {
+						page.items.push({
+							type: 'vector',
+							item: v
+						});
+					}
+					break;
+
+				case 'image':
+				case 'svg':
+				case 'beginClip':
+				case 'endClip':
+				case 'beginVerticalAlignment':
+				case 'endVerticalAlignment':
+					var img = pack(item.item);
+
+					img.x = (img.x || 0) + (useBlockXOffset ? (block.xOffset || 0) : ctx.x);
+					img.y = (img.y || 0) + (useBlockYOffset ? (block.yOffset || 0) : ctx.y);
+
+					page.items.push({
+						type: item.type,
+						item: img
+					});
+					break;
+			}
+		});
+
+		if (!dontUpdateContextPosition) {
+			ctx.moveDown(block.height);
+		}
+
+		return true;
+	}
+
+	/**
+	 * Pushes the provided context onto the stack or creates a new one
+	 *
+	 * pushContext(context) - pushes the provided context and makes it current
+	 * pushContext(width, height) - creates and pushes a new context with the specified width and height
+	 * pushContext() - creates a new context for unbreakable blocks (with current availableWidth and full-page-height)
+	 *
+	 * @param {DocumentContext|number} contextOrWidth
+	 * @param {number} height
+	 */
+	pushContext(contextOrWidth, height) {
+		if (contextOrWidth === undefined) {
+			height = this.context().getCurrentPage().height - this.context().pageMargins.top - this.context().pageMargins.bottom;
+			contextOrWidth = this.context().availableWidth;
+		}
+
+		if (isNumber(contextOrWidth)) {
+			let width = contextOrWidth;
+			contextOrWidth = new DocumentContext();
+			contextOrWidth.addPage({ width: width, height: height }, { left: 0, right: 0, top: 0, bottom: 0 });
+		}
+
+		this.contextStack.push(this.context());
+		this._context = contextOrWidth;
+	}
+
+	popContext() {
+		this._context = this.contextStack.pop();
+	}
+
+	getCurrentPositionOnPage() {
+		return (this.contextStack[0] || this.context()).getCurrentPosition();
+	}
 }
 
 function addPageItem(page, item, index) {
@@ -27,481 +525,57 @@ function addPageItem(page, item, index) {
 	}
 }
 
-ElementWriter.prototype.addLine = function (line, dontUpdateContextPosition, index) {
-	var height = line.getHeight();
-	var context = this.context;
-	var page = context.getCurrentPage(),
-		position = this.getCurrentPositionOnPage();
-
-	if (context.availableHeight < height || !page) {
-		return false;
-	}
-
-	line.x = context.x + (line.x || 0);
-	line.y = context.y + (line.y || 0);
-
-	this.alignLine(line);
-
-	addPageItem(page, {
-		type: 'line',
-		item: line
-	}, index);
-	this.tracker.emit('lineAdded', line);
-
-	if (!dontUpdateContextPosition) {
-		context.moveDown(height);
-	}
-
-	return position;
-};
-
-ElementWriter.prototype.alignLine = function (line) {
-	var width = this.context.availableWidth;
-	var lineWidth = line.getWidth();
-
-	var alignment = line.inlines && line.inlines.length > 0 && line.inlines[0].alignment;
-	var isRTL = line.isRTL && line.isRTL();
-
-	var offset = 0;
-
-	// For RTL lines, we need special handling
-	if (isRTL) {
-		// If it's RTL and no explicit alignment, default to right
-		if (!alignment || alignment === 'left') {
-			alignment = 'right';
-		}
-
-		// For RTL, we need to reverse the order of inlines and adjust their positions
-		this.adjustRTLInlines(line, width);
-	}
-
-	switch (alignment) {
-		case 'right':
-			offset = width - lineWidth;
-			break;
-		case 'center':
-			offset = (width - lineWidth) / 2;
-			break;
-	}
-
-	if (offset) {
-		line.x = (line.x || 0) + offset;
-	}
-
-	if (alignment === 'justify' &&
-		!line.newLineForced &&
-		!line.lastLineInParagraph &&
-		line.inlines.length > 1) {
-		var additionalSpacing = (width - lineWidth) / (line.inlines.length - 1);
-
-		for (var i = 1, l = line.inlines.length; i < l; i++) {
-			offset = i * additionalSpacing;
-
-			line.inlines[i].x += offset;
-			line.inlines[i].justifyShift = additionalSpacing;
-		}
-	}
-};
-
-ElementWriter.prototype.addImage = function (image, index, type) {
-	var context = this.context;
-	var page = context.getCurrentPage(),
-		position = this.getCurrentPositionOnPage();
-
-	if (!page || (image.absolutePosition === undefined && context.availableHeight < image._height && page.items.length > 0)) {
-		return false;
-	}
-
-	if (image._x === undefined) {
-		image._x = image.x || 0;
-	}
-
-	image.x = context.x + image._x;
-	image.y = context.y;
-
-	this.alignImage(image);
-
-	addPageItem(page, {
-		type: type || 'image',
-		item: image
-	}, index);
-
-	context.moveDown(image._height);
-
-	return position;
-};
-
-ElementWriter.prototype.addSVG = function (image, index) {
-	return this.addImage(image, index, 'svg');
-};
-
-ElementWriter.prototype.addQr = function (qr, index) {
-	var context = this.context;
-	var page = context.getCurrentPage(),
-		position = this.getCurrentPositionOnPage();
-
-	if (!page || (qr.absolutePosition === undefined && context.availableHeight < qr._height)) {
-		return false;
-	}
-
-	if (qr._x === undefined) {
-		qr._x = qr.x || 0;
-	}
-
-	qr.x = context.x + qr._x;
-	qr.y = context.y;
-
-	this.alignImage(qr);
-
-	for (var i = 0, l = qr._canvas.length; i < l; i++) {
-		var vector = qr._canvas[i];
-		vector.x += qr.x;
-		vector.y += qr.y;
-		this.addVector(vector, true, true, index);
-	}
-
-	context.moveDown(qr._height);
-
-	return position;
-};
-
-ElementWriter.prototype.alignImage = function (image) {
-	var width = this.context.availableWidth;
-	var imageWidth = image._minWidth;
-	var offset = 0;
-	switch (image._alignment) {
-		case 'right':
-			offset = width - imageWidth;
-			break;
-		case 'center':
-			offset = (width - imageWidth) / 2;
-			break;
-	}
-
-	if (offset) {
-		image.x = (image.x || 0) + offset;
-	}
-};
-
-ElementWriter.prototype.alignCanvas = function (node) {
-	var width = this.context.availableWidth;
-	var canvasWidth = node._minWidth;
-	var offset = 0;
-	switch (node._alignment) {
-		case 'right':
-			offset = width - canvasWidth;
-			break;
-		case 'center':
-			offset = (width - canvasWidth) / 2;
-			break;
-	}
-	if (offset) {
-		node.canvas.forEach(function (vector) {
-			offsetVector(vector, offset, 0);
-		});
-	}
-};
-
-ElementWriter.prototype.addVector = function (vector, ignoreContextX, ignoreContextY, index, forcePage) {
-	var context = this.context;
-	var page = context.getCurrentPage();
-	if (isNumber(forcePage)) {
-		page = context.pages[forcePage];
-	}
-	var position = this.getCurrentPositionOnPage();
-
-	if (page) {
-		offsetVector(vector, ignoreContextX ? 0 : context.x, ignoreContextY ? 0 : context.y);
-		addPageItem(page, {
-			type: 'vector',
-			item: vector
-		}, index);
-		return position;
-	}
-};
-
-ElementWriter.prototype.beginClip = function (width, height) {
-	var ctx = this.context;
-	var page = ctx.getCurrentPage();
-	page.items.push({
-		type: 'beginClip',
-		item: { x: ctx.x, y: ctx.y, width: width, height: height }
-	});
-	return true;
-};
-
-ElementWriter.prototype.endClip = function () {
-	var ctx = this.context;
-	var page = ctx.getCurrentPage();
-	page.items.push({
-		type: 'endClip'
-	});
-	return true;
-};
-
 /**
- * Adjust RTL inline positioning
- * @param {Line} line - Line containing RTL text
- * @param {number} availableWidth - Available width for the line
+ * Reverse word order for RTL display, keeping bracketed groups together
+ * @param {Array} words
+ * @returns {Array}
  */
-ElementWriter.prototype.adjustRTLInlines = function (line, availableWidth) {
-	if (!line.inlines || line.inlines.length === 0) {
-		return;
-	}
-
-	// For RTL text, we need to reverse the visual order of inlines
-	// and recalculate their positions from right to left
-	var rtlInlines = [];
-	var ltrInlines = [];
-
-
-	// Separate RTL, LTR, and neutral inlines using Sticky Direction
-	// Neutrals (numbers, punctuation) adopt the direction of the preceding strong characters.
-	var LTR_REGEX = /[A-Za-z\u00C0-\u024F\u1E00-\u1EFF]/;
-	var currentDir = 'rtl'; // Default to line's direction (since this is adjustRTLInlines)
-
-	line.inlines.forEach(function (inline) {
-		var hasStrongLTR = LTR_REGEX.test(inline.text);
-		var hasStrongRTL = rtlUtils.containsRTL(inline.text);
-
-		// First check the inline's own strong directionality
-		if (hasStrongLTR && !hasStrongRTL) {
-			// Pure LTR inline
-			currentDir = 'ltr';
-			ltrInlines.push(inline);
-		} else if (hasStrongRTL && !hasStrongLTR) {
-			// Pure RTL inline
-			currentDir = 'rtl';
-			rtlInlines.push(inline);
-		} else if (hasStrongLTR && hasStrongRTL) {
-			// Mixed inline - treat as RTL since we're in an RTL line
-			currentDir = 'rtl';
-			rtlInlines.push(inline);
-		} else {
-			// Neutral inline - adopt the direction of preceding content
-			if (currentDir === 'ltr') {
-				ltrInlines.push(inline);
-			} else {
-				rtlInlines.push(inline);
-			}
-		}
-	});
-
-	// If we have RTL inlines, reverse their order and recalculate positions
-	if (rtlInlines.length > 0) {
-		// Reverse the order of RTL inlines for proper display
-		rtlInlines = reverseWords(rtlInlines);
-
-		// Recalculate x positions from right to left
-		var currentX = 0;
-		var reorderedInlines = [];
-
-		// Add LTR inlines first (if any)
-		ltrInlines.forEach(function (inline) {
-
-			inline.x = currentX;
-			currentX += inline.width;
-			reorderedInlines.push(inline);
-		});
-
-
-
-		// Add RTL inlines (already reversed)
-		var NUMBER_PUNCTUATION_REGEX = /^(\d+)([.:\/\-)(]+)(\s*)$/;
-
-		rtlInlines.forEach(function (inline) {
-			// Only apply bracket mirroring if the inline actually contains RTL characters.
-			// Mixed language inlines like "(Complete)" should not have their brackets flipped.
-			if (rtlUtils.containsRTL(inline.text)) {
-				inline.text = rtlUtils.fixArabicTextUsingReplace(inline.text);
-			}
-
-			// Fix for "3." rendering as ".3" in RTL context.
-			// Reorder to Space-Punct-Number ($3$2$1) for correct RTL visual order.
-			// Add explicit space ' ' to ensure separation.
-			if (NUMBER_PUNCTUATION_REGEX.test(inline.text)) {
-				inline.text = inline.text.replace(NUMBER_PUNCTUATION_REGEX, ' ' + '$3$2$1');
-			}
-
-			inline.x = currentX;
-			currentX += inline.width;
-			reorderedInlines.push(inline);
-		});
-		// Replace the line's inlines with the reordered ones
-		line.inlines = reorderedInlines;
-	}
-};
 function reverseWords(words) {
 	let reversed = [];
 	let i = words.length - 1;
 
-<<<<<<< HEAD
-=======
-function reverseWords(words) {
-	let reversed = [];
-	let i = words.length - 1;
-
->>>>>>> dca2edc593e83277752000d1b29f17872f0ce410
 	const bracketPairs = {
-		">": "<",
-		"]": "[",
-		"}": "{",
-		")": "(",
+		'>': '<',
+		']': '[',
+		'}': '{',
+
 	};
 
 	while (i >= 0) {
 		const word = words[i];
-
 		const closingBracket = word.text.match(/[>\])}]/);
 		let wordHasRtl = true;
 
-		if (word && typeof word.text === "string")
-			wordHasRtl = rtlUtils.containsRTL(word.text);
+		if (word && typeof word.text === 'string') {
+			wordHasRtl = containsRTL(word.text);
+		}
 
 		if (!wordHasRtl && closingBracket) {
 			const openingBracket = bracketPairs[closingBracket[0]];
-
 			const group = [word];
 			let openFound = false;
 
 			if (!word.text.includes(openingBracket)) {
-				// Scan backward to find the matching opening bracket
 				for (let j = i - 1; j >= 0; j--) {
 					group.unshift(words[j]);
-					if (words[j].text.match(/[<\[\(\{]/)) {
+					if (words[j].text.match(/[<\\[({]/)) {
 						openFound = true;
-						i = j - 1; // move index past the group
+						i = j - 1;
 						break;
 					}
 				}
 			}
 
 			reversed.push(...group);
-			if (!openFound) i--; // fallback if no opening bracket found
+			if (!openFound) i--;
 			continue;
 		}
 
-		// Regular word, just push
 		reversed.push(word);
 		i--;
 	}
 
 	return reversed;
 }
-<<<<<<< HEAD
-=======
 
->>>>>>> dca2edc593e83277752000d1b29f17872f0ce410
-function cloneLine(line) {
-	var result = new Line(line.maxWidth);
-
-	for (var key in line) {
-		if (line.hasOwnProperty(key)) {
-			result[key] = line[key];
-		}
-	}
-
-	return result;
-}
-
-ElementWriter.prototype.addFragment = function (block, useBlockXOffset, useBlockYOffset, dontUpdateContextPosition) {
-	var ctx = this.context;
-	var page = ctx.getCurrentPage();
-
-	if (!useBlockXOffset && block.height > ctx.availableHeight) {
-		return false;
-	}
-
-	block.items.forEach(function (item) {
-		switch (item.type) {
-			case 'line':
-				var l = cloneLine(item.item);
-
-				if (l._node) {
-					l._node.positions[0].pageNumber = ctx.page + 1;
-				}
-				l.x = (l.x || 0) + (useBlockXOffset ? (block.xOffset || 0) : ctx.x);
-				l.y = (l.y || 0) + (useBlockYOffset ? (block.yOffset || 0) : ctx.y);
-
-				page.items.push({
-					type: 'line',
-					item: l
-				});
-				break;
-
-			case 'vector':
-				var v = pack(item.item);
-
-				offsetVector(v, useBlockXOffset ? (block.xOffset || 0) : ctx.x, useBlockYOffset ? (block.yOffset || 0) : ctx.y);
-				if (v._isFillColorFromUnbreakable) {
-					// If the item is a fillColor from an unbreakable block
-					// We have to add it at the beginning of the items body array of the page
-					delete v._isFillColorFromUnbreakable;
-					const endOfBackgroundItemsIndex = ctx.backgroundLength[ctx.page];
-					page.items.splice(endOfBackgroundItemsIndex, 0, {
-						type: 'vector',
-						item: v
-					});
-				} else {
-					page.items.push({
-						type: 'vector',
-						item: v
-					});
-				}
-				break;
-
-			case 'image':
-			case 'svg':
-				var img = pack(item.item);
-
-				img.x = (img.x || 0) + (useBlockXOffset ? (block.xOffset || 0) : ctx.x);
-				img.y = (img.y || 0) + (useBlockYOffset ? (block.yOffset || 0) : ctx.y);
-
-				page.items.push({
-					type: item.type,
-					item: img
-				});
-				break;
-		}
-	});
-
-	if (!dontUpdateContextPosition) {
-		ctx.moveDown(block.height);
-	}
-
-	return true;
-};
-
-/**
- * Pushes the provided context onto the stack or creates a new one
- *
- * pushContext(context) - pushes the provided context and makes it current
- * pushContext(width, height) - creates and pushes a new context with the specified width and height
- * pushContext() - creates a new context for unbreakable blocks (with current availableWidth and full-page-height)
- * @param contextOrWidth
- * @param height
- */
-ElementWriter.prototype.pushContext = function (contextOrWidth, height) {
-	if (contextOrWidth === undefined) {
-		height = this.context.getCurrentPage().height - this.context.pageMargins.top - this.context.pageMargins.bottom;
-		contextOrWidth = this.context.availableWidth;
-	}
-
-	if (isNumber(contextOrWidth)) {
-		contextOrWidth = new DocumentContext({ width: contextOrWidth, height: height }, { left: 0, right: 0, top: 0, bottom: 0 });
-	}
-
-	this.contextStack.push(this.context);
-	this.context = contextOrWidth;
-};
-
-ElementWriter.prototype.popContext = function () {
-	this.context = this.contextStack.pop();
-};
-
-ElementWriter.prototype.getCurrentPositionOnPage = function () {
-	return (this.contextStack[0] || this.context).getCurrentPosition();
-};
-
-
-module.exports = ElementWriter;
+export default ElementWriter;
