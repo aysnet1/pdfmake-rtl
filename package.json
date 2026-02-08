@@ -1,69 +1,70 @@
 {
   "name": "pdfmake-rtl",
-  "version": "1.3.6",
-  "description": "Enhanced PDFMake with automatic RTL (Arabic/Persian/Urdu) support - Complete standalone package (beta)",
-  "main": "index.js",
+  "version": "2.0.0",
+  "description": "Enhanced PDFMake with comprehensive RTL (Arabic/Persian/Urdu) support - Production ready package",
+  "main": "js/index.js",
+  "esnext": "src/index.js",
   "browser": "build/pdfmake.js",
   "directories": {
-    "test": "tests",
-    "examples": "examples"
+    "test": "tests"
   },
   "dependencies": {
-    "@foliojs-fork/linebreak": "^1.1.2",
-    "@foliojs-fork/pdfkit": "^0.15.3",
-    "iconv-lite": "^0.6.3",
-    "xmldoc": "^2.0.1"
+    "express": "^5.2.1",
+    "linebreak": "^1.1.0",
+    "pdfkit": "^0.17.2",
+    "xmldoc": "^2.0.3"
   },
   "devDependencies": {
-    "@babel/cli": "^7.27.2",
-    "@babel/core": "^7.27.1",
-    "@babel/plugin-transform-modules-commonjs": "^7.27.1",
-    "@babel/preset-env": "^7.27.2",
-    "@eslint/js": "^9.26.0",
+    "@babel/cli": "^7.28.6",
+    "@babel/core": "^7.28.6",
+    "@babel/plugin-transform-modules-commonjs": "^7.28.6",
+    "@babel/preset-env": "^7.28.6",
+    "@eslint/js": "^9.39.2",
     "assert": "^2.1.0",
     "babel-loader": "^10.0.0",
     "brfs": "^2.0.2",
     "browserify-zlib": "^0.2.0",
     "buffer": "^6.0.3",
-    "core-js": "3.19.0",
-    "eslint": "^9.26.0",
-    "eslint-plugin-jsdoc": "^50.6.11",
+    "core-js": "^3.47.0",
+    "eslint": "^9.39.2",
+    "eslint-plugin-jsdoc": "^62.1.0",
     "expose-loader": "^5.0.1",
     "file-saver": "^2.0.5",
-    "globals": "^16.1.0",
-    "mocha": "^11.2.2",
+    "globals": "^17.0.0",
+    "mocha": "^11.7.5",
     "npm-run-all": "^4.1.5",
     "process": "^0.11.10",
-    "rewire": "^7.0.0",
+    "rewire": "^9.0.1",
     "shx": "^0.4.0",
-    "sinon": "^20.0.0",
+    "sinon": "^21.0.1",
     "source-map-loader": "^5.0.0",
     "stream-browserify": "^3.0.0",
     "string-replace-webpack-plugin": "^0.1.3",
-    "svg-to-pdfkit": "^0.1.8",
-    "terser-webpack-plugin": "^5.3.14",
+    "svg-to-pdfkit": "github:alafr/SVG-to-PDFKit#b091ebd4e7b7d2310eb1003511cd5de480f7e0e1",
+    "terser-webpack-plugin": "^5.3.16",
     "transform-loader": "^0.2.4",
     "util": "^0.12.5",
-    "webpack": "^5.99.8",
+    "webpack": "^5.104.1",
     "webpack-cli": "^6.0.1"
   },
   "engines": {
-    "node": ">=18"
+    "node": ">=20"
   },
   "scripts": {
-    "test": "run-s build mocha",
-    "test-package": "node test-package.js",
-    "prepublishOnly": "npm run test-package && echo 'Package ready for publishing'",
-    "build": "run-s build:3rdparty build:browser",
-    "build:3rdparty": "shx cp node_modules/svg-to-pdfkit/source.js src/3rd-party/svg-to-pdfkit/source.js && shx cp node_modules/svg-to-pdfkit/LICENSE src/3rd-party/svg-to-pdfkit/LICENSE",
+    "test": "run-s build mocha lint",
+    "build": "run-s build:clean build:node build:browser build:standard-fonts build:fonts build:cairo build:vfs",
+    "build:clean": "shx rm -rf js build",
+    "build:3rdparty": "shx cp node_modules/svg-to-pdfkit/source.js src/3rd-party/svg-to-pdfkit/source.js && shx cp node_modules/svg-to-pdfkit/LICENSE src/3rd-party/svg-to-pdfkit/LICENSE && git apply src/3rd-party/svg-to-pdfkit/0001-fix-contains.patch",
+    "build:node": "babel src --out-dir js",
     "build:browser": "webpack",
-    "build:browser-standard-fonts": "webpack --config webpack-standardfonts.config.js",
     "build:vfs": "node build-vfs.js \"./examples/fonts\"",
     "build:examples": "node build-examples.js",
-    "lint": "eslint \"./src/**/*.js\" \"./tests/**/*.js\" \"./examples/**/*.js\"",
-    "mocha": "mocha --reporter spec \"./tests/**/*.js\"",
-    "playground": "node dev-playground/server.js",
-    "example:rtl-nested-header": "node examples/rtl-nested-header.js"
+    "build:standard-fonts": "shx mkdir -p build/standard-fonts && brfs \"./src/browser-extensions/standard-fonts/Courier.js\" > build/standard-fonts/Courier.js && brfs \"./src/browser-extensions/standard-fonts/Helvetica.js\" > build/standard-fonts/Helvetica.js && brfs \"./src/browser-extensions/standard-fonts/Times.js\" > build/standard-fonts/Times.js && brfs \"./src/browser-extensions/standard-fonts/Symbol.js\" > build/standard-fonts/Symbol.js && brfs \"./src/browser-extensions/standard-fonts/ZapfDingbats.js\" > build/standard-fonts/ZapfDingbats.js",
+    "build:fonts": "shx mkdir -p build/fonts && shx mkdir -p build/fonts/Roboto && shx cp -r fonts/Roboto/*.* build/fonts/Roboto && brfs \"./src/browser-extensions/fonts/Roboto.js\" > build/fonts/Roboto.js",
+    "build:cairo": "shx mkdir -p build/fonts && shx mkdir -p build/fonts/Cairo && shx cp -r fonts/Cairo/*.* build/fonts/Cairo && brfs \"./src/browser-extensions/fonts/Cairo.js\" > build/fonts/Cairo.js",
+    "lint": "eslint \"./src/**/*.js\" \"./tests/**/*.js\" \"./examples/**/*.js\" \"./standard-fonts/**/*.js\" \"./fonts/**/*.js\"",
+    "mocha": "mocha --reporter spec \"./tests/**/*.spec.js\"",
+    "playground": "node dev-playground/server.js"
   },
   "repository": {
     "type": "git",
@@ -107,9 +108,9 @@
   "author": "Aycer(based on original PDFMake by Bartek Pampuch)",
   "contributors": [
     {
-      "name": "Bartek Pampuch",
-      "email": "bartosz.pampuch@gmail.com",
-      "url": "https://github.com/bpampuch"
+      "name": "Aycer",
+      "email": "aysser21@gmail.com",
+      "url": "https://github.com/aysnet1"
     }
   ],
   "license": "MIT",
@@ -121,6 +122,5 @@
         "tests"
       ]
     }
-  },
-  "packageManager": "yarn@1.22.22+sha512.a6b2f7906b721bba3d67d4aff083df04dad64c399707841b7acf00f6b133b7ac24255f2652fa22ae3534329dc6180534e98d17432037ff6fd140556e2bb3137e"
+  }
 }
