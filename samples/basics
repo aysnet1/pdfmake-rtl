@@ -1,4 +1,7 @@
 content: [
 	'First paragraph',
-	'Another paragraph, this time a little bit longer to make sure, this line will be divided into at least two lines'
+	'Another paragraph, this time a little bit longer to make sure, this line will be divided into at least two lines',
+	'هذا نص طويل باللغة العربية للتأكد من أن هذا السطر سيتم تقسيمه إلى سطرين على الأقل عند عرضه في ملف PDF، وذلك لاختبار دعم النصوص الطويلة من اليمين إلى اليسار',
+	{ text: 'مرحبا بالعالم - نص عربي' }
+
 ]
