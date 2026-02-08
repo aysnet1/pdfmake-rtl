@@ -16,6 +16,12 @@
 
 All existing PDFMake code works unchanged, with automatic RTL support added!
 
+> **⚠️ Important:** This package has moved to a new npm scope. Please use [`pdfmake-rtl`](https://www.npmjs.com/package/pdfmake-rtl) going forward.
+>
+> ```bash
+> npm install pdfmake-rtl
+> ```
+
 ## 🚀 Key Features
 
 - ✅ **Automatic RTL Detection** - No need to set `rtl` flags
@@ -93,13 +99,13 @@ npm install pdfmake-rtl
 ```html
 <!-- Load pdfmake-rtl + fonts -->
 <script src="https://unpkg.com/pdfmake-rtl/build/pdfmake.min.js"></script>
-<script src="https://unpkg.com/pdfmake-rtl/build/vfs_fonts.js"></script>
-<script src="https://unpkg.com/pdfmake-rtl/build/fonts/Cairo.js"></script>
+<!-- <script src="https://unpkg.com/pdfmake-rtl/build/vfs_fonts.js"></script>
+<script src="https://unpkg.com/pdfmake-rtl/build/fonts/Cairo.js"></script> -->
 
 <script>
 	var dd = {
 		rtl: true,
-		// If Cairo font isn't applied automatically, set `rtl: true` to force RTL mode or add defaultStyle Cairo
+		// If Cairo font isn't applied automatically, set `rtl: true` to force RTL mode or add defaultStyle:{font:'Cairo'}
 		content: [
 			// RTL paragraph — auto-detected, no configuration needed
 			{ text: "مرحباً بكم في مكتبة pdfmake-rtl", fontSize: 20, bold: true },
@@ -111,6 +117,7 @@ npm install pdfmake-rtl
 			// RTL table — columns auto-reverse for Arabic content
 			{
 				table: {
+					// rtl:true
 					widths: ["*", "*", "*"],
 					body: [
 						[
@@ -152,15 +159,15 @@ npm install pdfmake-rtl
 ## ⚡ Quick Start — Node.js (Server-Side)
 
 ```js
-var pdfmake = require("pdfmake-rtl");
+var pdfmake = require("@digicole/pdfmake-rtl");
 
 // Add fonts
 // Cairo is the default font for RTL languages (Arabic, Persian, Urdu)
 // Roboto is the default font for LTR/Latin text
-var Roboto = require("pdfmake-rtl/fonts/Roboto");
+var Roboto = require("@digicole/pdfmake-rtl/fonts/Roboto");
 pdfmake.addFonts(Roboto);
 
-var Cairo = require("pdfmake-rtl/fonts/Cairo");
+var Cairo = require("@digicole/pdfmake-rtl/fonts/Cairo");
 pdfmake.addFonts(Cairo);
 
 var dd = {
@@ -229,23 +236,6 @@ MIT
 
 - [@bpampuch](https://github.com/bpampuch) — Founder
 - [@liborm85](https://github.com/liborm85) — Maintainer
-
-pdfmake is based on a truly amazing library [pdfkit](https://github.com/devongovett/pdfkit) (credits to [@devongovett](https://github.com/devongovett)).
-
-Thanks to all contributors.
-
-## License
-
-MIT
-
-## Authors pdfmake-rtl
-
-- [@aysnet1](https://github.com/aysnet1)
-
-## Authors pdfmake
-
-- [@bpampuch](https://github.com/bpampuch) (founder)
-- [@liborm85](https://github.com/liborm85)
 
 pdfmake is based on a truly amazing library [pdfkit](https://github.com/devongovett/pdfkit) (credits to [@devongovett](https://github.com/devongovett)).
 
