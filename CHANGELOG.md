@@ -5,7 +5,7 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [2.0.0] - 2026-02-08
+## [2.1.0] - 2026-02-08
 
 ### Added
 
@@ -24,20 +24,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Fixed mixed character rendering issues with combined LTR/RTL scripts
 - Fixed mixed language text handling for Arabic, Persian, Urdu alongside Latin characters
 - Corrected bidirectional text reordering in mixed-language paragraphs
-
-### Breaking Changes
-
-- Major version bump; review migration guide for upgrading from v1.x
-
-### Added
-
-- Major version upgrade with significant architectural improvements
-- Full rewrite of RTL processing pipeline for better performance and reliability
-
-### Improved
-
-- Overall RTL text rendering quality and consistency
-- Performance optimizations for large documents with mixed LTR/RTL content
 
 ### Breaking Changes
 
