@@ -41,6 +41,10 @@ PDF document generation library for server-side and client-side in pure JavaScri
 
 Check out [the playground](http://aysnet1.github.io/pdfmake-rtl/playground.html) and [examples](https://github.com/aysnet1/pdfmake-rtl/tree/master/examples).
 
+## documentation
+
+For comprehensive guides, API references, and usage examples, visit the official documentation at [pdfmake.github.io/docs](https://pdfmake.github.io/docs/).
+
 ### Features
 
 #### 🔤 RTL Language Support
@@ -99,8 +103,8 @@ npm install pdfmake-rtl
 ```html
 <!-- Load pdfmake-rtl + fonts -->
 <script src="https://unpkg.com/pdfmake-rtl/build/pdfmake.min.js"></script>
-<!-- <script src="https://unpkg.com/pdfmake-rtl/build/vfs_fonts.js"></script>
-<script src="https://unpkg.com/pdfmake-rtl/build/fonts/Cairo.js"></script> -->
+<script src="https://unpkg.com/pdfmake-rtl/build/vfs_fonts.js"></script>
+<!-- <script src="https://unpkg.com/pdfmake-rtl/build/fonts/Cairo.js"></script> -->
 
 <script>
 	var dd = {
@@ -159,15 +163,15 @@ npm install pdfmake-rtl
 ## ⚡ Quick Start — Node.js (Server-Side)
 
 ```js
-var pdfmake = require("@digicole/pdfmake-rtl");
+var pdfmake = require("pdfmake-rtl");
 
 // Add fonts
 // Cairo is the default font for RTL languages (Arabic, Persian, Urdu)
 // Roboto is the default font for LTR/Latin text
-var Roboto = require("@digicole/pdfmake-rtl/fonts/Roboto");
+var Roboto = require("pdfmake-rtl/fonts/Roboto");
 pdfmake.addFonts(Roboto);
 
-var Cairo = require("@digicole/pdfmake-rtl/fonts/Cairo");
+var Cairo = require("pdfmake-rtl/fonts/Cairo");
 pdfmake.addFonts(Cairo);
 
 var dd = {
