@@ -1,16 +1,8 @@
-var fonts = {
-	Roboto: {
-		normal: 'fonts/Roboto-Regular.ttf',
-		bold: 'fonts/Roboto-Medium.ttf',
-		italics: 'fonts/Roboto-Italic.ttf',
-		bolditalics: 'fonts/Roboto-MediumItalic.ttf'
-	}
-};
+var pdfmake = require('../js/index'); // only during development, otherwise use the following line
+//var pdfmake = require('pdfmake');
 
-var PdfPrinter = require('../src/printer');
-var printer = new PdfPrinter(fonts);
-var fs = require('fs');
-
+var Roboto = require('../fonts/Roboto');
+pdfmake.addFonts(Roboto);
 
 var docDefinition = {
 	content: [
@@ -36,7 +28,7 @@ var docDefinition = {
 			text: [
 				'We can also mix named-styles and style-overrides at both paragraph and inline level. ',
 				'For example, this paragraph uses the "bigger" style, which changes fontSize to 15 and sets italics to true. ',
-				'Texts are not italics though. It\'s because we\'ve overriden italics back to false at ',
+				'Texts are not italics though. It\'s because we\'ve overridden italics back to false at ',
 				'the paragraph level. \n\n',
 				'We can also change the style of a single inline. Let\'s use a named style called header: ',
 				{ text: 'like here.\n', style: 'header' },
@@ -58,10 +50,14 @@ var docDefinition = {
 			fontSize: 15,
 			italics: true
 		}
-	},
-	language: "en-AU"
+	}
 };
 
-var pdfDoc = printer.createPdfKitDocument(docDefinition);
-pdfDoc.pipe(fs.createWriteStream('pdfs/styling_inlines.pdf'));
-pdfDoc.end();
+var now = new Date();
+
+var pdf = pdfmake.createPdf(docDefinition);
+pdf.write('pdfs/styling_inlines.pdf').then(() => {
+	console.log(new Date() - now);
+}, err => {
+	console.error(err);
+});

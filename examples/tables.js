@@ -1,15 +1,12 @@
-var fonts = {
-	Roboto: {
-		normal: 'fonts/Roboto-Regular.ttf',
-		bold: 'fonts/Roboto-Medium.ttf',
-		italics: 'fonts/Roboto-Italic.ttf',
-		bolditalics: 'fonts/Roboto-MediumItalic.ttf'
-	}
-};
+/*eslint no-unused-vars: ["error", {"args": "none"}]*/
 
-var PdfPrinter = require('../src/printer');
-var printer = new PdfPrinter(fonts);
-var fs = require('fs');
+
+var pdfmake = require('../js/index'); // only during development, otherwise use the following line
+//var pdfmake = require('pdfmake');
+
+var Roboto = require('../fonts/Roboto');
+pdfmake.addFonts(Roboto);
+
 
 var docDefinition = {
 	content: [
@@ -92,7 +89,7 @@ var docDefinition = {
 			table: {
 				widths: ['*', 'auto'],
 				body: [
-					['This is a star-sized column. The next column over, an auto-sized column, will wrap to accomodate all the text in this cell.', 'I am auto sized.'],
+					['This is a star-sized column. The next column over, an auto-sized column, will wrap to accommodate all the text in this cell.', 'I am auto sized.'],
 				]
 			}
 		},
@@ -101,7 +98,7 @@ var docDefinition = {
 			table: {
 				widths: ['*', 'auto'],
 				body: [
-					['This is a star-sized column. The next column over, an auto-sized column, will not wrap to accomodate all the text in this cell, because it has been given the noWrap style.', { text: 'I am auto sized.', noWrap: true }],
+					['This is a star-sized column. The next column over, an auto-sized column, will not wrap to accommodate all the text in this cell, because it has been given the noWrap style.', { text: 'I am auto sized.', noWrap: true }],
 				]
 			}
 		},
@@ -303,19 +300,19 @@ var docDefinition = {
 				body: [
 					['Sample value 1', 'Sample value 2', 'Sample value 3'],
 					[
-						{text: 'Sample value 1',fillOpacity:0.15,fillColor:'blue'},
-						{text: 'Sample value 2',fillOpacity:0.60,fillColor:'blue'},
-						{text: 'Sample value 3',fillOpacity:0.85,fillColor:'blue'},
+						{ text: 'Sample value 1', fillOpacity: 0.15, fillColor: 'blue' },
+						{ text: 'Sample value 2', fillOpacity: 0.60, fillColor: 'blue' },
+						{ text: 'Sample value 3', fillOpacity: 0.85, fillColor: 'blue' },
 					],
 					[
-						{text: 'Sample value 1', fillOpacity: 0.15, fillColor: ['stripe45d', 'blue']},
-						{text: 'Sample value 2', fillOpacity: 0.60, fillColor: ['stripe45d', 'blue']},
-						{text: 'Sample value 3', fillOpacity: 0.85, fillColor: ['stripe45d', 'blue']},
+						{ text: 'Sample value 1', fillOpacity: 0.15, fillColor: ['stripe45d', 'blue'] },
+						{ text: 'Sample value 2', fillOpacity: 0.60, fillColor: ['stripe45d', 'blue'] },
+						{ text: 'Sample value 3', fillOpacity: 0.85, fillColor: ['stripe45d', 'blue'] },
 					],
 					[
-						{text: 'Sample value 1', fillOpacity: 0.15, fillColor: 'blue', overlayPattern: ['stripe45d', 'gray'], overlayOpacity: 0.15},
-						{text: 'Sample value 2', fillOpacity: 0.60, fillColor: 'blue', overlayPattern: ['stripe45d', 'gray'], overlayOpacity: 0.5},
-						{text: 'Sample value 3', fillOpacity: 0.85, fillColor: 'blue', overlayPattern: ['stripe45d', 'gray'], overlayOpacity: 0.9},
+						{ text: 'Sample value 1', fillOpacity: 0.15, fillColor: 'blue', overlayPattern: ['stripe45d', 'gray'], overlayOpacity: 0.15 },
+						{ text: 'Sample value 2', fillOpacity: 0.60, fillColor: 'blue', overlayPattern: ['stripe45d', 'gray'], overlayOpacity: 0.5 },
+						{ text: 'Sample value 3', fillOpacity: 0.85, fillColor: 'blue', overlayPattern: ['stripe45d', 'gray'], overlayOpacity: 0.9 },
 					],
 					['Sample value 1', 'Sample value 2', 'Sample value 3']
 				]
@@ -328,9 +325,9 @@ var docDefinition = {
 				body: [
 					['Sample value 1', 'Sample value 2', 'Sample value 3'],
 					[
-						{text: 'Sample value 1',fillOpacity:0.15},
-						{text: 'Sample value 2',fillOpacity:0.60},
-						{text: 'Sample value 3',fillOpacity:0.85},
+						{ text: 'Sample value 1', fillOpacity: 0.15 },
+						{ text: 'Sample value 2', fillOpacity: 0.60 },
+						{ text: 'Sample value 3', fillOpacity: 0.85 },
 					],
 					['Sample value 1', 'Sample value 2', 'Sample value 3']
 				]
@@ -354,7 +351,7 @@ var docDefinition = {
 			layout: {
 				fillColor: 'blue',
 				fillOpacity: function (rowIndex, node, columnIndex) {
-					return (rowIndex/8+columnIndex/3);
+					return (rowIndex / 8 + columnIndex / 3);
 				}
 			}
 		},
@@ -724,29 +721,29 @@ var docDefinition = {
 					],
 					[
 						{
-							image: 'fonts/sampleImage.jpg',
+							image: 'examples/fonts/sampleImage.jpg',
 							cover: { width: 100, height: 100 },
 						},
 						{
-							image: 'fonts/sampleImage.jpg',
+							image: 'examples/fonts/sampleImage.jpg',
 							cover: { width: 100, height: 100 },
 						},
 						{
-							image: 'fonts/sampleImage.jpg',
+							image: 'examples/fonts/sampleImage.jpg',
 							cover: { width: 100, height: 100 },
 						},
 					],
 					[
 						{
-							image: 'fonts/sampleImage.jpg',
+							image: 'examples/fonts/sampleImage.jpg',
 							fit: [100, 100],
 						},
 						{
-							image: 'fonts/sampleImage.jpg',
+							image: 'examples/fonts/sampleImage.jpg',
 							fit: [100, 100],
 						},
 						{
-							image: 'fonts/sampleImage.jpg',
+							image: 'examples/fonts/sampleImage.jpg',
 							fit: [100, 100],
 						},
 					],
@@ -792,6 +789,11 @@ var docDefinition = {
 	}
 };
 
-var pdfDoc = printer.createPdfKitDocument(docDefinition);
-pdfDoc.pipe(fs.createWriteStream('pdfs/tables.pdf'));
-pdfDoc.end();
+var now = new Date();
+
+var pdf = pdfmake.createPdf(docDefinition);
+pdf.write('examples/pdfs/tables.pdf').then(() => {
+	console.log(new Date() - now);
+}, err => {
+	console.error(err);
+});

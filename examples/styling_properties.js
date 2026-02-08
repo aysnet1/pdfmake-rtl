@@ -1,15 +1,8 @@
-var fonts = {
-	Roboto: {
-		normal: 'fonts/Roboto-Regular.ttf',
-		bold: 'fonts/Roboto-Medium.ttf',
-		italics: 'fonts/Roboto-Italic.ttf',
-		bolditalics: 'fonts/Roboto-MediumItalic.ttf'
-	}
-};
+var pdfmake = require('../js/index'); // only during development, otherwise use the following line
+//var pdfmake = require('pdfmake');
 
-var PdfPrinter = require('../src/printer');
-var printer = new PdfPrinter(fonts);
-var fs = require('fs');
+var Roboto = require('../fonts/Roboto');
+pdfmake.addFonts(Roboto);
 
 
 var docDefinition = {
@@ -62,11 +55,27 @@ var docDefinition = {
 				},
 				' World'
 			]
-		}
-		,
+		},
 		'\n\n',
 		{
 			text: 'Text background pattern', background: ['stripe45d', 'gray']
+		},
+		{
+			text: 'Customize word break:',
+			pageBreak: 'before'
+		},
+		{
+			text: 'DefaultLine\n"BreakBehaviour" "ForATextWithVeryVery" "LongLongWords"',
+			fontSize: 30,
+		},
+		{
+			text: '\n\n',
+			fontSize: 30,
+		},
+		{
+			text: 'BreakAll\n"LineBreakBehaviour" "ForATextWithVeryVery" "LongLongWords"',
+			fontSize: 30,
+			wordBreak: 'break-all',
 		}
 	],
 	patterns: {
@@ -79,6 +88,11 @@ var docDefinition = {
 	}
 };
 
-var pdfDoc = printer.createPdfKitDocument(docDefinition);
-pdfDoc.pipe(fs.createWriteStream('pdfs/styling_properties.pdf'));
-pdfDoc.end();
+var now = new Date();
+
+var pdf = pdfmake.createPdf(docDefinition);
+pdf.write('pdfs/styling_properties.pdf').then(() => {
+	console.log(new Date() - now);
+}, err => {
+	console.error(err);
+});

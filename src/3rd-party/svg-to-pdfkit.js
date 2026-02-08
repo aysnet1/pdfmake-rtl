@@ -1,3 +1,3 @@
-var SVGtoPDF = require('./svg-to-pdfkit/source.js');
+import SVGtoPDF from './svg-to-pdfkit/source.js';
 
-module.exports = SVGtoPDF;
+export default SVGtoPDF;

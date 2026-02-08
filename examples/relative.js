@@ -1,15 +1,8 @@
-var fonts = {
-	Roboto: {
-		normal: 'fonts/Roboto-Regular.ttf',
-		bold: 'fonts/Roboto-Medium.ttf',
-		italics: 'fonts/Roboto-Italic.ttf',
-		bolditalics: 'fonts/Roboto-MediumItalic.ttf'
-	}
-};
+var pdfmake = require('../js/index'); // only during development, otherwise use the following line
+//var pdfmake = require('pdfmake');
 
-var PdfPrinter = require('../src/printer');
-var printer = new PdfPrinter(fonts);
-var fs = require('fs');
+var Roboto = require('../fonts/Roboto');
+pdfmake.addFonts(Roboto);
 
 var left = 20;
 var width = 130;
@@ -26,7 +19,7 @@ var chart = [{ stack: chartText }, { canvas: chartLines }];
 buildXAxis();
 buildYAxis();
 
-var documentDefinition = {
+var docDefinition = {
 	content: [
 		{ text: 'We sometimes don\'t know the absolute position of text', margin: [10, 0, 0, 50] },
 		{
@@ -63,13 +56,18 @@ var documentDefinition = {
 						}]
 				]
 			}
-		},
+		}
 	]
 };
 
-var pdfDoc = printer.createPdfKitDocument(documentDefinition);
-pdfDoc.pipe(fs.createWriteStream('pdfs/relative.pdf'));
-pdfDoc.end();
+var now = new Date();
+
+var pdf = pdfmake.createPdf(docDefinition);
+pdf.write('pdfs/relative.pdf').then(() => {
+	console.log(new Date() - now);
+}, err => {
+	console.error(err);
+});
 
 function buildXAxis() {
 	var xTicks = [

@@ -1,141 +1,208 @@
-'use strict';
-
-var isString = require('./helpers').isString;
-var isArray = require('./helpers').isArray;
-var isUndefined = require('./helpers').isUndefined;
-var isNull = require('./helpers').isNull;
+import { isString, isValue } from './helpers/variableType';
 
 /**
- * Creates an instance of StyleContextStack used for style inheritance and style overrides
- *
- * @class
- * @this {StyleContextStack}
- * @param styleDictionary
- * @param defaultStyle
- * @param {object} named styles dictionary
- * @param {object} optional default style definition
+ * Used for style inheritance and style overrides
  */
-function StyleContextStack(styleDictionary, defaultStyle) {
-	this.defaultStyle = defaultStyle || {};
-	this.styleDictionary = styleDictionary;
-	this.styleOverrides = [];
-}
+class StyleContextStack {
 
-/**
- * Creates cloned version of current stack
- * @returns {StyleContextStack} current stack snapshot
- */
-StyleContextStack.prototype.clone = function () {
-	var stack = new StyleContextStack(this.styleDictionary, this.defaultStyle);
-
-	this.styleOverrides.forEach(function (item) {
-		stack.styleOverrides.push(item);
-	});
-
-	return stack;
-};
-
-/**
- * Pushes style-name or style-overrides-object onto the stack for future evaluation
- *
- * @param {string | object} styleNameOrOverride style-name (referring to styleDictionary) or
- *                                            a new dictionary defining overriding properties
- */
-StyleContextStack.prototype.push = function (styleNameOrOverride) {
-	this.styleOverrides.push(styleNameOrOverride);
-};
-
-/**
- * Removes last style-name or style-overrides-object from the stack
- *
- * @param {number} howMany - optional number of elements to be popped (if not specified,
- *                           one element will be removed from the stack)
- */
-StyleContextStack.prototype.pop = function (howMany) {
-	howMany = howMany || 1;
-
-	while (howMany-- > 0) {
-		this.styleOverrides.pop();
-	}
-};
-
-/**
- * Creates a set of named styles or/and a style-overrides-object based on the item,
- * pushes those elements onto the stack for future evaluation and returns the number
- * of elements pushed, so they can be easily poped then.
- *
- * @param {object} item - an object with optional style property and/or style overrides
- * @returns the number of items pushed onto the stack
- */
-StyleContextStack.prototype.autopush = function (item) {
-	if (isString(item)) {
-		return 0;
+	/**
+	 * @param {object} styleDictionary named styles dictionary
+	 * @param {object} defaultStyle optional default style definition
+	 */
+	constructor(styleDictionary, defaultStyle = {}) {
+		this.styleDictionary = styleDictionary;
+		this.defaultStyle = defaultStyle;
+		this.styleOverrides = [];
 	}
 
-	var styleNames = [];
+	/**
+	 * Creates cloned version of current stack
+	 *
+	 * @returns {StyleContextStack} current stack snapshot
+	 */
+	clone() {
+		let stack = new StyleContextStack(this.styleDictionary, this.defaultStyle);
 
-	if (item.style) {
-		if (isArray(item.style)) {
-			styleNames = item.style;
-		} else {
-			styleNames = [item.style];
+		this.styleOverrides.forEach(item => {
+			stack.styleOverrides.push(item);
+		});
+
+		return stack;
+	}
+
+	/**
+	 * Pushes style-name or style-overrides-object onto the stack for future evaluation
+	 *
+	 * @param {string|object} styleNameOrOverride style-name (referring to styleDictionary) or
+	 *                                            a new dictionary defining overriding properties
+	 */
+	push(styleNameOrOverride) {
+		this.styleOverrides.push(styleNameOrOverride);
+	}
+
+	/**
+	 * Removes last style-name or style-overrides-object from the stack
+	 *
+	 * @param {number} howMany optional number of elements to be popped (if not specified,
+	 *                         one element will be removed from the stack)
+	 */
+	pop(howMany = 1) {
+		while (howMany-- > 0) {
+			this.styleOverrides.pop();
 		}
 	}
 
-	for (var i = 0, l = styleNames.length; i < l; i++) {
-		this.push(styleNames[i]);
-	}
+	/**
+	 * Creates a set of named styles or/and a style-overrides-object based on the item,
+	 * pushes those elements onto the stack for future evaluation and returns the number
+	 * of elements pushed, so they can be easily popped then.
+	 *
+	 * @param {object} item - an object with optional style property and/or style overrides
+	 * @returns {number} the number of items pushed onto the stack
+	 */
+	autopush(item) {
+		if (isString(item)) {
+			return 0;
+		}
 
-	// rather than spend significant time making a styleOverrideObject, just add item
-	this.push(item);
-	return styleNames.length + 1;
-};
+		if (typeof item.section !== 'undefined') { // section node not support style overrides
+			return 0;
+		}
 
-/**
- * Automatically pushes elements onto the stack, using autopush based on item,
- * executes callback and then pops elements back. Returns value returned by callback
- *
- * @param  {object}   item - an object with optional style property and/or style overrides
- * @param  {Function} function to be called between autopush and pop
- * @param callback
- * @returns {object} value returned by callback
- */
-StyleContextStack.prototype.auto = function (item, callback) {
-	var pushedItems = this.autopush(item);
-	var result = callback();
+		let styleNames = [];
 
-	if (pushedItems > 0) {
-		this.pop(pushedItems);
-	}
-
-	return result;
-};
-
-/**
- * Evaluates stack and returns value of a named property
- *
- * @param {string} property - property name
- * @returns property value or null if not found
- */
-StyleContextStack.prototype.getProperty = function (property) {
-	if (this.styleOverrides) {
-		for (var i = this.styleOverrides.length - 1; i >= 0; i--) {
-			var item = this.styleOverrides[i];
-
-			if (isString(item)) {
-				// named-style-override
-				var style = this.styleDictionary[item];
-				if (style && !isUndefined(style[property]) && !isNull(style[property])) {
-					return style[property];
-				}
-			} else if (!isUndefined(item[property]) && !isNull(item[property])) {
-				// style-overrides-object
-				return item[property];
+		if (item.style) {
+			if (Array.isArray(item.style)) {
+				styleNames = item.style;
+			} else {
+				styleNames = [item.style];
 			}
 		}
+
+		for (let i = 0, l = styleNames.length; i < l; i++) {
+			this.push(styleNames[i]);
+		}
+
+		// rather than spend significant time making a styleOverrideObject, just add item
+		this.push(item);
+		return styleNames.length + 1;
 	}
 
-	return this.defaultStyle && this.defaultStyle[property];
-};
+	/**
+	 * Automatically pushes elements onto the stack, using autopush based on item,
+	 * executes callback and then pops elements back. Returns value returned by callback
+	 *
+	 * @param {object} item - an object with optional style property and/or style overrides
+	 * @param {Function} callback to be called between autopush and pop
+	 * @returns {object} value returned by callback
+	 */
+	auto(item, callback) {
+		let pushedItems = this.autopush(item);
+		let result = callback();
 
-module.exports = StyleContextStack;
+		if (pushedItems > 0) {
+			this.pop(pushedItems);
+		}
+
+		return result;
+	}
+
+	/**
+	 * Evaluates stack and returns value of a named property
+	 *
+	 * @param {string} property - property name
+	 * @returns {?any} property value or null if not found
+	 */
+	getProperty(property) {
+
+		const getStylePropertyFromStyle = (styleName, property, visited = new Set()) => {
+			if (visited.has(styleName)) {
+				return undefined;
+			}
+			visited.add(styleName);
+
+			const style = this.styleDictionary[styleName];
+			if (!style) {
+				return undefined;
+			}
+
+			if (isValue(style[property])) {
+				return style[property];
+			}
+
+			if (style.extends) {
+				let parents = Array.isArray(style.extends) ? style.extends : [style.extends];
+				for (let i = parents.length - 1; i >= 0; i--) {
+					let value = getStylePropertyFromStyle(parents[i], property, visited);
+					if (isValue(value)) {
+						return value;
+					}
+				}
+			}
+
+			return undefined;
+		};
+
+		if (this.styleOverrides) {
+			for (let i = this.styleOverrides.length - 1; i >= 0; i--) {
+				let item = this.styleOverrides[i];
+
+				if (isString(item)) { // named-style-override
+					let value = getStylePropertyFromStyle(item, property);
+					if (isValue(value)) {
+						return value;
+					}
+				} else if (isValue(item[property])) { // style-overrides-object
+					return item[property];
+				}
+			}
+		}
+
+		return this.defaultStyle && this.defaultStyle[property];
+	}
+
+	/**
+	 * @param {object} item
+	 * @param {StyleContextStack} styleContextStack
+	 * @param {string} property
+	 * @param {any} defaultValue
+	 * @returns {any}
+	 */
+	static getStyleProperty(item, styleContextStack, property, defaultValue) {
+		let value;
+
+		if (isValue(item[property])) { // item defines this property
+			return item[property];
+		}
+
+		if (!styleContextStack) {
+			return defaultValue;
+		}
+
+		styleContextStack.auto(item, () => {
+			value = styleContextStack.getProperty(property);
+		});
+
+		return isValue(value) ? value : defaultValue;
+	}
+
+	/**
+	 * @param {object} source
+	 * @param {object} destination
+	 * @returns {object}
+	 */
+	static copyStyle(source = {}, destination = {}) {
+		// TODO: default style to source
+
+		for (let key in source) {
+			if (key != 'text' && source.hasOwnProperty(key)) {
+				destination[key] = source[key];
+			}
+		}
+
+		return destination;
+	}
+
+}
+
+export default StyleContextStack;

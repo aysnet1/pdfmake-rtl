@@ -1,15 +1,8 @@
-var fonts = {
-	Roboto: {
-		normal: 'fonts/Roboto-Regular.ttf',
-		bold: 'fonts/Roboto-Medium.ttf',
-		italics: 'fonts/Roboto-Italic.ttf',
-		bolditalics: 'fonts/Roboto-MediumItalic.ttf'
-	}
-};
+var pdfmake = require('../js/index'); // only during development, otherwise use the following line
+//var pdfmake = require('pdfmake');
 
-var PdfPrinter = require('../src/printer');
-var printer = new PdfPrinter(fonts);
-var fs = require('fs');
+var Roboto = require('../fonts/Roboto');
+pdfmake.addFonts(Roboto);
 
 
 var docDefinition = {
@@ -280,7 +273,7 @@ var docDefinition = {
 			ul: [
 				'item 1',
 				'item 2',
-				'item 3'
+				{ text: 'item 3 with custom marker color', markerColor: 'lime' }
 			]
 		},
 		{ text: '\n\nColored ordered list', style: 'header' },
@@ -299,7 +292,7 @@ var docDefinition = {
 			ol: [
 				'item 1',
 				'item 2',
-				'item 3'
+				{ text: 'item 3 with custom marker color', markerColor: 'lime' }
 			]
 		},
 		{ text: '\n\nOrdered list - type: lower-alpha', style: 'header' },
@@ -395,6 +388,23 @@ var docDefinition = {
 				{ text: 'item 3', listType: 'circle' }
 			]
 		},
+		{ text: '\n\nOrdered list with an empty item:', style: 'header' },
+		{
+			ol: [
+				'First item',
+				'Second item',
+				'',
+				'Fourth item'
+			]
+		},
+		{ text: '\n\nUnordered list with an empty item:', style: 'header' },
+		{
+			ul: [
+				'First bullet',
+				'',
+				'Third bullet'
+			]
+		},
 	],
 	styles: {
 		header: {
@@ -408,8 +418,10 @@ var docDefinition = {
 };
 
 var now = new Date();
-var pdfDoc = printer.createPdfKitDocument(docDefinition);
-pdfDoc.pipe(fs.createWriteStream('pdfs/lists.pdf'));
-pdfDoc.end();
 
-console.log(new Date() - now);
+var pdf = pdfmake.createPdf(docDefinition);
+pdf.write('examples/pdfs/lists.pdf').then(() => {
+	console.log(new Date() - now);
+}, err => {
+	console.error(err);
+});

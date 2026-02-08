@@ -1,0 +1,235 @@
+/*eslint no-unused-vars: ["error", {"args": "none"}]*/
+
+
+var pdfmake = require('../js/index'); // only during development, otherwise use the following line
+//var pdfmake = require('pdfmake');
+
+var Roboto = require('../fonts/Roboto');
+var Cairo = require('../fonts/Cairo');
+pdfmake.addFonts(Roboto);
+pdfmake.addFonts(Cairo);
+
+
+var docDefinition = {
+
+	content: [
+		{ text: 'مثال ترکیبی چندزبانه', style: 'header', alignment: 'right' },
+		{ text: 'Mixed RTL/LTR Document Example', style: 'header' },
+
+		{ text: 'بخش اول: پاراگراف فارسی', style: 'subheader', alignment: 'right' },
+		{
+			text: 'این یک پاراگراف نمونه به زبان فارسی است. در این سند ما از زبان‌های مختلف مانند فارسی، عربی، اردو و انگلیسی استفاده می‌کنیم. هدف نمایش ترکیب متون راست‌به‌چپ و چپ‌به‌راست در یک سند واحد است.',
+			alignment: 'right',
+
+			margin: [0, 5, 0, 10]
+		},
+
+		{ text: 'القسم الثاني: قائمة عربية', style: 'subheader', alignment: 'right' },
+		{
+
+			alignment: 'right',
+			ul: [
+				'اللغة العربية هي لغة القرآن الكريم',
+				'تُكتب من اليمين إلى اليسار',
+				'هي واحدة من أكثر اللغات انتشاراً في العالم',
+				{ text: 'يمكن دمجها مع English text بسهولة', bold: true }
+			],
+			margin: [0, 5, 0, 10]
+		},
+
+		{ text: 'اردو سیکشن', style: 'subheader', alignment: 'right' },
+		{
+			text: 'اردو پاکستان کی قومی زبان ہے۔ یہ ایک خوبصورت زبان ہے جو دائیں سے بائیں لکھی جاتی ہے۔',
+			alignment: 'right',
+
+			margin: [0, 5, 0, 10]
+		},
+
+		{ text: 'Section: Mixed Language Table', style: 'subheader' },
+		{
+			style: 'tableExample',
+			table: {
+				widths: ['*', '*', '*'],
+				headerRows: 1,
+				body: [
+					[
+						{ text: 'English', style: 'tableHeader', alignment: 'center' },
+						{ text: 'العربية', style: 'tableHeader', alignment: 'center' },
+						{ text: 'فارسی', style: 'tableHeader', alignment: 'center' }
+					],
+					[
+						'Hello World',
+						{ text: 'مرحبا بالعالم', alignment: 'right' },
+						{ text: 'سلام دنیا', alignment: 'right' }
+					],
+					[
+						'Thank you',
+						{ text: 'شكراً لك', alignment: 'right' },
+						{ text: 'متشکرم', alignment: 'right' }
+					],
+					[
+						'Good morning',
+						{ text: 'صباح الخير', alignment: 'right' },
+						{ text: 'صبح بخیر', alignment: 'right' }
+					]
+				]
+			}
+		},
+
+		{ text: 'جدول تو در تو - Nested Table', style: 'subheader', alignment: 'right' },
+		{
+			style: 'tableExample',
+			table: {
+				widths: ['*', '*'],
+				headerRows: 1,
+				body: [
+					[
+						{ text: 'التفاصيل / Details', style: 'tableHeader', alignment: 'center', colSpan: 2 },
+						{}
+					],
+					[
+						{
+							stack: [
+								{ text: 'المعلومات الشخصية', bold: true, alignment: 'right', margin: [0, 0, 0, 5] },
+								{
+									table: {
+										widths: ['*', '*'],
+										body: [
+											[
+												{ text: 'محمد أحمد', alignment: 'right' },
+												{ text: 'الاسم', alignment: 'right', bold: true }
+											],
+											[
+												{ text: 'القاهرة، مصر', alignment: 'right' },
+												{ text: 'المدينة', alignment: 'right', bold: true }
+											]
+										]
+									}
+								}
+							]
+						},
+						{
+							stack: [
+								{ text: 'Skills / مهارت‌ها', bold: true, margin: [0, 0, 0, 5] },
+								{
+									ul: [
+										'JavaScript & TypeScript',
+										'Node.js & React',
+										{
+											ul: [
+												{ text: 'تطوير الويب', alignment: 'right' },
+												{ text: 'برنامه‌نویسی وب', alignment: 'right' }
+											]
+										}
+
+									],
+
+								}
+							]
+						}
+					]
+				]
+			}
+		},
+
+		{ text: 'Ordered List - قائمة مرقمة', style: 'subheader' },
+		{
+
+			alignment: 'right',
+			ol: [
+				'الخطوة الأولى: تحديد المتطلبات',
+				'الخطوة الثانية: تصميم الحل',
+				{ text: 'الخطوة الثالثة: Implementation and Testing', bold: true },
+				'الخطوة الرابعة: النشر والتوزيع'
+			],
+			margin: [0, 5, 0, 10]
+		},
+
+		{ text: 'Mixed Inline Text', style: 'subheader' },
+		{
+			text: [
+				'This document demonstrates ',
+				{ text: 'النصوص المختلطة', bold: true, color: '#2196F3' },
+				' where both ',
+				{ text: 'فارسی', italics: true, color: '#4CAF50' },
+				' and ',
+				{ text: 'اردو', italics: true, color: '#FF9800' },
+				' can be combined with Latin text seamlessly.'
+			],
+			margin: [0, 5, 0, 15]
+		},
+
+		{ text: 'جدول الألوان - Color Reference Table', style: 'subheader', alignment: 'right' },
+		{
+			style: 'tableExample',
+			table: {
+				widths: [100, '*', '*', '*'],
+				headerRows: 1,
+				body: [
+					[
+						{ text: '#', style: 'tableHeader', alignment: 'center' },
+						{ text: 'Color', style: 'tableHeader', alignment: 'center' },
+						{ text: 'اللون', style: 'tableHeader', alignment: 'center' },
+						{ text: 'رنگ', style: 'tableHeader', alignment: 'center' }
+					],
+					[
+						{ text: '1', alignment: 'center' },
+						{ text: 'Red', fillColor: '#FFCDD2', alignment: 'center' },
+						{ text: 'أحمر', fillColor: '#FFCDD2', alignment: 'center' },
+						{ text: 'قرمز', fillColor: '#FFCDD2', alignment: 'center' }
+					],
+					[
+						{ text: '2', alignment: 'center' },
+						{ text: 'Blue', fillColor: '#BBDEFB', alignment: 'center' },
+						{ text: 'أزرق', fillColor: '#BBDEFB', alignment: 'center' },
+						{ text: 'آبی', fillColor: '#BBDEFB', alignment: 'center' }
+					],
+					[
+						{ text: '3', alignment: 'center' },
+						{ text: 'Green', fillColor: '#C8E6C9', alignment: 'center' },
+						{ text: 'أخضر', fillColor: '#C8E6C9', alignment: 'center' },
+						{ text: 'سبز', fillColor: '#C8E6C9', alignment: 'center' }
+					]
+				]
+			},
+			layout: {
+				fillColor: function (rowIndex) {
+					return (rowIndex === 0) ? '#EEEEEE' : null;
+				}
+			}
+		}
+	],
+	styles: {
+		header: {
+			fontSize: 18,
+			bold: true,
+			margin: [0, 0, 0, 10]
+		},
+		subheader: {
+			fontSize: 14,
+			bold: true,
+			margin: [0, 15, 0, 5]
+		},
+		tableExample: {
+			margin: [0, 5, 0, 15]
+		},
+		tableHeader: {
+			bold: true,
+			fontSize: 13,
+			color: 'black'
+		}
+	},
+	defaultStyle: {
+		fontSize: 11
+	}
+
+};
+
+var now = new Date();
+
+var pdf = pdfmake.createPdf(docDefinition);
+pdf.write('examples/pdfs/rtl-mix.pdf').then(() => {
+	console.log(new Date() - now);
+}, err => {
+	console.error(err);
+});
