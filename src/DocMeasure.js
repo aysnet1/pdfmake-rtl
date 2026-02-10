@@ -1,12 +1,12 @@
-import TextInlines from './TextInlines';
-import StyleContextStack from './StyleContextStack';
-import ColumnCalculator from './columnCalculator';
-import { defaultTableLayout } from './tableLayouts';
-import { isString, isNumber, isObject } from './helpers/variableType';
-import { stringifyNode, getNodeId, getNodeMargin } from './helpers/node';
-import { pack } from './helpers/tools';
+import TextInlines from './TextInlines.js';
+import StyleContextStack from './StyleContextStack.js';
+import ColumnCalculator from './columnCalculator.js';
+import { defaultTableLayout } from './tableLayouts.js';
+import { isString, isNumber, isObject } from './helpers/variableType.js';
+import { stringifyNode, getNodeId, getNodeMargin } from './helpers/node.js';
+import { pack } from './helpers/tools.js';
 import qrEncoder from './qrEnc.js';
-import { containsRTL } from './rtlUtils';
+import { containsRTL } from './rtlUtils.js';
 
 class DocMeasure {
 	constructor(

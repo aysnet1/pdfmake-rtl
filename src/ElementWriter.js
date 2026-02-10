@@ -132,7 +132,7 @@ class ElementWriter extends EventEmitter {
 		const LTR_REGEX = /[A-Za-z\u00C0-\u024F\u1E00-\u1EFF]/;
 		const NUMBER_PUNCTUATION_REGEX = /^(\d+)([.:/\-)(]+)(\s*)$/;
 		// Characters that are "boundary neutral" — separators/punctuation between scripts
-		const BOUNDARY_NEUTRAL = /[\//\\\-()[\]{}<>:;.,!?@#$%^&*_=+|~`'"،؛؟\s]/;
+		const BOUNDARY_NEUTRAL = /[/\\\-()[\]{}<>:;.,!?@#$%^&*_=+|~`'"،؛؟\s]/;
 
 		// --- Step 0: Pre-split inlines at RTL↔neutral and LTR↔neutral boundaries ---
 		// e.g. "العربية/" → ["العربية", "/"]  and  "hello-" → ["hello", "-"]
