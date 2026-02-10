@@ -13,12 +13,6 @@
 
 All existing PDFMake code works unchanged, with automatic RTL support added!
 
-> **⚠️ Important:** This package has moved to a new npm scope. Please use [`pdfmake-rtl`](https://www.npmjs.com/package/pdfmake-rtl) going forward.
->
-> ```bash
-> npm install pdfmake-rtl
-> ```
-
 ## 🚀 Key Features
 
 - ✅ **Automatic RTL Detection** - No need to set `rtl` flags
@@ -91,9 +85,9 @@ For comprehensive guides, API references, and usage examples, visit the official
 
 ## 📦 Installation
 
-```bash
+````bash
 npm install pdfmake-rtl
-```
+```markdown
 
 ## ⚡ Quick Start — Browser (Client-Side)
 
@@ -153,7 +147,7 @@ npm install pdfmake-rtl
 
 	pdfMake.createPdf(dd).open();
 </script>
-```
+````
 
 > 📄 See the full working example: [`examples/simple-rtl-table.html`](examples/simple-rtl-table.html)
 
@@ -197,17 +191,11 @@ var pdf = pdfmake.createPdf(dd);
 pdf.write("output.pdf").then(() => console.log("PDF created!"));
 ```
 
-## Documentation
-
-**Documentation URL: https://pdfmake-rtl.github.io/docs/**
-
-Source of documentation: https://github.com/pdfmake-rtl/docs **Improvements are welcome!**
-
 ## Building from sources
 
 using npm:
 
-```
+```bash
 git clone https://github.com/aysnet1/pdfmake-rtl.git
 cd pdfmake-rtl
 npm install
@@ -216,7 +204,7 @@ npm run build
 
 using yarn:
 
-```
+```bash
 git clone https://github.com/aysnet1/pdfmake-rtl.git
 cd pdfmake-rtl
 yarn

@@ -1,5 +1,5 @@
 {
-  "name": "@digicole/pdfmake-rtl",
+  "name": "pdfmake-rtl",
   "version": "2.1.2",
   "description": "Enhanced PDFMake with comprehensive RTL (Arabic/Persian/Urdu) support - Production ready package",
   "main": "js/index.js",
