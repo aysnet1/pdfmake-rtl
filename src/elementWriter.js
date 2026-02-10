@@ -132,7 +132,7 @@ class ElementWriter extends EventEmitter {
 		const LTR_REGEX = /[A-Za-z\u00C0-\u024F\u1E00-\u1EFF]/;
 		const NUMBER_PUNCTUATION_REGEX = /^(\d+)([.:/\-)(]+)(\s*)$/;
 		// Characters that are "boundary neutral" — separators/punctuation between scripts
-		const BOUNDARY_NEUTRAL = /[\/\\\-()[\]{}<>:;.,!?@#$%^&*_=+|~`'"،؛؟\s]/;
+		const BOUNDARY_NEUTRAL = /[\//\\\-()[\]{}<>:;.,!?@#$%^&*_=+|~`'"،؛؟\s]/;
 
 		// --- Step 0: Pre-split inlines at RTL↔neutral and LTR↔neutral boundaries ---
 		// e.g. "العربية/" → ["العربية", "/"]  and  "hello-" → ["hello", "-"]
@@ -242,8 +242,8 @@ class ElementWriter extends EventEmitter {
 		// Find matching bracket pairs across runs. If the content between
 		// a "(" neutral run and a ")" neutral run is predominantly one direction,
 		// merge the opening bracket, content, and closing bracket into that direction.
-		const OPEN_BRACKETS = /[(\[{<]/;
-		const CLOSE_BRACKETS = /[)\]}>]/;
+		const OPEN_BRACKETS = /[(\\[{<]/;
+	//	const CLOSE_BRACKETS = /[)\]}>]/;
 		const BRACKET_MATCH = { '(': ')', '[': ']', '{': '}', '<': '>' };
 
 		for (let i = 0; i < runs.length; i++) {
