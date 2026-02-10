@@ -524,7 +524,7 @@ var docDefinition = {
 						},
 						{
 							stack: [
-								{ text: 'Informations personnelles', bold: true, margin: [0, 0, 0, 5] },
+								{ text: 'Information personnelles', bold: true, margin: [0, 0, 0, 5] },
 								{
 									table: {
 										widths: [80, '*'],
@@ -949,7 +949,7 @@ var docDefinition = {
 							ul: [
 								'Analyse de données',
 								'Apprentissage automatique',
-								'Traitement du langage naturel',
+								'Traitement du langauge naturel',
 								{ text: 'Réseaux neuronaux', bold: true }
 							]
 						},
