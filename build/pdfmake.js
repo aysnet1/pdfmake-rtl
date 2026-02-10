@@ -1,4 +1,4 @@
-/*! @digicole/pdfmake-rtl v2.0.0, @license MIT, @link https://github.com/aysnet1/pdfmake-rtl#readme */
+/*! pdfmake-rtl v2.1.2, @license MIT, @link https://github.com/aysnet1/pdfmake-rtl#readme */
 (function webpackUniversalModuleDefinition(root, factory) {
 	if(typeof exports === 'object' && typeof module === 'object')
 		module.exports = factory();
@@ -23,7 +23,7 @@ __webpack_require__.d(__webpack_exports__, {
 });
 
 // EXTERNAL MODULE: ./node_modules/pdfkit/js/pdfkit.es.js
-var pdfkit_es = __webpack_require__(1341);
+var pdfkit_es = __webpack_require__(3442);
 ;// ./src/PDFDocument.js
 /* provided dependency */ var Buffer = __webpack_require__(783)["Buffer"];
 
@@ -380,7 +380,7 @@ const ARABIC_RANGE = (/* unused pure expression or super */ null && ([[0x0600, 0
 const PERSIAN_RANGE = (/* unused pure expression or super */ null && ([[0x06A9, 0x06AF],
 // Persian Kaf, Gaf
 [0x06C0, 0x06C3],
-// Persian Heh, Teh Marbuta variants
+// Persian Heh, Marbuta variants
 [0x06CC, 0x06CE],
 // Persian Yeh variants
 [0x06D0, 0x06D5],
@@ -725,6 +725,9 @@ function processRTLTable(tableNode, forceRTL) {
     shouldBeRTL = totalCells > 0 && rtlCellCount / totalCells >= 0.3;
   }
   if (shouldBeRTL) {
+    // Mark the table as RTL for the drawing phase (TableProcessor uses this)
+    tableNode.table._rtl = true;
+
     // Reverse table columns for RTL layout, handling colSpan correctly
     tableNode.table.body = tableNode.table.body.map(row => {
       if (Array.isArray(row)) {
@@ -5281,7 +5284,7 @@ class ElementWriter extends events.EventEmitter {
     const LTR_REGEX = /[A-Za-z\u00C0-\u024F\u1E00-\u1EFF]/;
     const NUMBER_PUNCTUATION_REGEX = /^(\d+)([.:/\-)(]+)(\s*)$/;
     // Characters that are "boundary neutral" — separators/punctuation between scripts
-    const BOUNDARY_NEUTRAL = /[\/\\\-()[\]{}<>:;.,!?@#$%^&*_=+|~`'"،؛؟\s]/;
+    const BOUNDARY_NEUTRAL = /[/\\\-()[\]{}<>:;.,!?@#$%^&*_=+|~`'"،؛؟\s]/;
 
     // --- Step 0: Pre-split inlines at RTL↔neutral and LTR↔neutral boundaries ---
     // e.g. "العربية/" → ["العربية", "/"]  and  "hello-" → ["hello", "-"]
@@ -5393,8 +5396,8 @@ class ElementWriter extends events.EventEmitter {
     // Find matching bracket pairs across runs. If the content between
     // a "(" neutral run and a ")" neutral run is predominantly one direction,
     // merge the opening bracket, content, and closing bracket into that direction.
-    const OPEN_BRACKETS = /[(\[{<]/;
-    const CLOSE_BRACKETS = /[)\]}>]/;
+    const OPEN_BRACKETS = /[(\\[{<]/;
+    //	const CLOSE_BRACKETS = /[)\]}>]/;
     const BRACKET_MATCH = {
       '(': ')',
       '[': ']',
@@ -6227,6 +6230,19 @@ class TableProcessor {
     columnCalculator.buildColumnWidths(tableNode.table.widths, availableWidth, this.offsets.total, tableNode);
     this.tableWidth = tableNode._offsets.total + getTableInnerContentWidth();
     this.rowSpanData = prepareRowSpanData();
+
+    // RTL table right-alignment: shift the table grid to the right
+    // when the table doesn't fill the full available width
+    if (tableNode.table._rtl) {
+      let fullAvailableWidth = writer.context().availableWidth;
+      let rtlOffset = fullAvailableWidth - this.tableWidth;
+      if (rtlOffset > 0.5) {
+        // only shift if there's meaningful space
+        for (let i = 0; i < this.rowSpanData.length; i++) {
+          this.rowSpanData[i].left += rtlOffset;
+        }
+      }
+    }
     this.cleanUpRepeatables = false;
 
     // headersRows and rowsWithoutPageBreak (headerRows + keepWithHeaderRows)
@@ -7570,6 +7586,19 @@ class LayoutBuilder {
     const marginXParent = this.nestedLevel === 1 ? marginX : null;
     const _bottomByPage = tableNode ? tableNode._bottomByPage : null;
     this.writer.context().beginColumnGroup(marginXParent, _bottomByPage);
+
+    // RTL table right-alignment: shift the starting x position to the right
+    // so that the table content aligns with the right-aligned grid
+    if (tableNode && tableNode.table && tableNode.table._rtl) {
+      let tableWidth = tableNode._offsets.total;
+      for (let w = 0; w < widths.length; w++) {
+        tableWidth += widths[w]._calcWidth;
+      }
+      let rtlOffset = this.writer.context().availableWidth - tableWidth;
+      if (rtlOffset > 0.5) {
+        this.writer.context().x += rtlOffset;
+      }
+    }
     for (let i = 0, l = cells.length; i < l; i++) {
       let cell = cells[i];
       let cellIndexBegin = i;
@@ -9171,7 +9200,7 @@ class OutputDocument {
 }
 /* harmony default export */ const src_OutputDocument = (OutputDocument);
 // EXTERNAL MODULE: ./node_modules/file-saver/dist/FileSaver.min.js
-var FileSaver_min = __webpack_require__(9304);
+var FileSaver_min = __webpack_require__(1116);
 ;// ./src/browser-extensions/OutputDocumentBrowser.js
 
 
@@ -22615,7 +22644,7 @@ module.exports = {
 
 /***/ },
 
-/***/ 1341
+/***/ 3442
 (__unused_webpack_module, exports, __webpack_require__) {
 
 "use strict";
@@ -49726,7 +49755,7 @@ module.exports = function whichTypedArray(value) {
 
 /***/ },
 
-/***/ 9304
+/***/ 1116
 (module, exports, __webpack_require__) {
 
 var __WEBPACK_AMD_DEFINE_FACTORY__, __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;(function(a,b){if(true)!(__WEBPACK_AMD_DEFINE_ARRAY__ = [], __WEBPACK_AMD_DEFINE_FACTORY__ = (b),

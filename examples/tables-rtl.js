@@ -1076,6 +1076,32 @@ var docDefinition = {
 				paddingTop: function () { return 6; },
 				paddingBottom: function () { return 6; }
 			}
+		},
+		{
+			table: {
+				widths: ['auto', 'auto', 'auto'],
+				rtl: true,
+				body: [
+					[
+
+						[
+							{ text: 'العمود الأول', alignment: 'center', bold: true },
+							{ text: 'العمود الثاني', alignment: 'center', bold: true },
+							{ text: 'العمود الثالث', alignment: 'center', bold: true }
+						],
+						[
+							{ text: 'صف ١، عمود ١', alignment: 'right' },
+							{ text: 'صف ١، عمود ٢', alignment: 'right' },
+							{ text: 'صف ١، عمود ٣', alignment: 'right' }
+						],
+						[
+							{ text: 'صف ٢، عمود ١', alignment: 'right' },
+							{ text: 'صف ٢، عمود ٢', alignment: 'right' },
+							{ text: 'صف ٢، عمود ٣', alignment: 'right' }
+						]
+					]
+				]
+			}
 		}
 	],
 

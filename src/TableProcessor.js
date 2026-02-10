@@ -99,6 +99,19 @@ class TableProcessor {
 
 		this.tableWidth = tableNode._offsets.total + getTableInnerContentWidth();
 		this.rowSpanData = prepareRowSpanData();
+
+		// RTL table right-alignment: shift the table grid to the right
+		// when the table doesn't fill the full available width
+		if (tableNode.table._rtl) {
+			let fullAvailableWidth = writer.context().availableWidth;
+			let rtlOffset = fullAvailableWidth - this.tableWidth;
+			if (rtlOffset > 0.5) { // only shift if there's meaningful space
+				for (let i = 0; i < this.rowSpanData.length; i++) {
+					this.rowSpanData[i].left += rtlOffset;
+				}
+			}
+		}
+
 		this.cleanUpRepeatables = false;
 
 		// headersRows and rowsWithoutPageBreak (headerRows + keepWithHeaderRows)

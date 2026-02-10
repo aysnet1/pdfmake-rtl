@@ -854,6 +854,19 @@ class LayoutBuilder {
 		const _bottomByPage = tableNode ? tableNode._bottomByPage : null;
 		this.writer.context().beginColumnGroup(marginXParent, _bottomByPage);
 
+		// RTL table right-alignment: shift the starting x position to the right
+		// so that the table content aligns with the right-aligned grid
+		if (tableNode && tableNode.table && tableNode.table._rtl) {
+			let tableWidth = tableNode._offsets.total;
+			for (let w = 0; w < widths.length; w++) {
+				tableWidth += widths[w]._calcWidth;
+			}
+			let rtlOffset = this.writer.context().availableWidth - tableWidth;
+			if (rtlOffset > 0.5) {
+				this.writer.context().x += rtlOffset;
+			}
+		}
+
 		for (let i = 0, l = cells.length; i < l; i++) {
 			let cell = cells[i];
 			let cellIndexBegin = i;
