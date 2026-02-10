@@ -339,6 +339,9 @@ function processRTLTable(tableNode, forceRTL = false) {
 	}
 
 	if (shouldBeRTL) {
+		// Mark the table as RTL for the drawing phase (TableProcessor uses this)
+		tableNode.table._rtl = true;
+
 		// Reverse table columns for RTL layout, handling colSpan correctly
 		tableNode.table.body = tableNode.table.body.map(row => {
 			if (Array.isArray(row)) {
