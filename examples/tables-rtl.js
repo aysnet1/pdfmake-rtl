@@ -949,7 +949,7 @@ var docDefinition = {
 							ul: [
 								'Analyse de données',
 								'Apprentissage automatique',
-								'Traitement du langauge naturel',
+								'Traitement du language naturel',
 								{ text: 'Réseaux neuronaux', bold: true }
 							]
 						},
