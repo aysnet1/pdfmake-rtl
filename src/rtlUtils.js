@@ -15,7 +15,7 @@ const ARABIC_RANGE = [
 // Unicode ranges for Persian (Farsi) specific characters
 const PERSIAN_RANGE = [
 	[0x06A9, 0x06AF], // Persian Kaf, Gaf
-	[0x06C0, 0x06C3], // Persian Heh, Teh Marbuta variants
+	[0x06C0, 0x06C3], // Persian Heh, The Marbuta variants
 	[0x06CC, 0x06CE], // Persian Yeh variants
 	[0x06D0, 0x06D5], // Persian Yeh Barree, Arabic-Indic digits
 	[0x200C, 0x200D]  // Zero Width Non-Joiner, Zero Width Joiner (used in Persian)
