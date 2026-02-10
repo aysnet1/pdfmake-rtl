@@ -1,4 +1,4 @@
-<!-- [![Node.js CI][githubactions_img]][githubactions_url] -->
+ [![Node.js CI][githubactions_img]][githubactions_url] 
 
 # pdfmake-RTL [![GitHub][github_img]][github_url] [![npm][npm_img]][npm_url]
 
@@ -8,7 +8,7 @@
 [github_url]: https://github.com/bpampuch/pdfmake-rtl/releases/latest
 [npm_img]: https://img.shields.io/npm/v/pdfmake-rtl.svg?colorB=0E7FBF
 [npm_url]: https://www.npmjs.com/package/pdfmake-rtl
-[cdnjs_img]: https://img.shields.io/cdnjs/v/pdfmake-rtl.svg?colorB=0E7FBF
+
 
 <!-- [cndjs_url]: https://cdnjs.com/libraries/pdfmake-rtl -->
 
