@@ -1,4 +1,4 @@
-/*! @digicole/pdfmake-rtl v2.1.2, @license MIT, @link https://github.com/aysnet1/pdfmake-rtl#readme */
+/*! pdfmake-rtl v2.1.2, @license MIT, @link https://github.com/aysnet1/pdfmake-rtl#readme */
 (function webpackUniversalModuleDefinition(root, factory) {
 	if(typeof exports === 'object' && typeof module === 'object')
 		module.exports = factory();
@@ -23,7 +23,7 @@ __webpack_require__.d(__webpack_exports__, {
 });
 
 // EXTERNAL MODULE: ./node_modules/pdfkit/js/pdfkit.es.js
-var pdfkit_es = __webpack_require__(7697);
+var pdfkit_es = __webpack_require__(3442);
 ;// ./src/PDFDocument.js
 /* provided dependency */ var Buffer = __webpack_require__(783)["Buffer"];
 
@@ -9200,7 +9200,7 @@ class OutputDocument {
 }
 /* harmony default export */ const src_OutputDocument = (OutputDocument);
 // EXTERNAL MODULE: ./node_modules/file-saver/dist/FileSaver.min.js
-var FileSaver_min = __webpack_require__(553);
+var FileSaver_min = __webpack_require__(1116);
 ;// ./src/browser-extensions/OutputDocumentBrowser.js
 
 
@@ -22644,7 +22644,7 @@ module.exports = {
 
 /***/ },
 
-/***/ 7697
+/***/ 3442
 (__unused_webpack_module, exports, __webpack_require__) {
 
 "use strict";
@@ -49755,7 +49755,7 @@ module.exports = function whichTypedArray(value) {
 
 /***/ },
 
-/***/ 553
+/***/ 1116
 (module, exports, __webpack_require__) {
 
 var __WEBPACK_AMD_DEFINE_FACTORY__, __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;(function(a,b){if(true)!(__WEBPACK_AMD_DEFINE_ARRAY__ = [], __WEBPACK_AMD_DEFINE_FACTORY__ = (b),
