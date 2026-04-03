@@ -1,6 +1,6 @@
 import TextBreaker from './TextBreaker';
 import StyleContextStack from './StyleContextStack';
-import { containsRTL, getTextDirection } from './rtlUtils';
+import { containsRTL, getTextDirection, isHebrewChar } from './rtlUtils';
 
 const LEADING = /^(\s)+/g;
 const TRAILING = /(\s)+$/g;
@@ -108,7 +108,7 @@ class TextInlines {
 			// 1. Item-level font (set directly on the text node)
 			// 2. Style/named-style font (from style stack)
 			// 3. defaultStyle font (from document definition)
-			// 4. Auto-detect: Cairo for RTL/Arabic text, Roboto for LTR/Latin text
+			// 4. Auto-detect: Rubik for Hebrew, Cairo for Arabic/Persian/Urdu, Roboto for LTR/Latin text
 			let font = StyleContextStack.getStyleProperty(item, styleContextStack, 'font', null);
 			let bold = StyleContextStack.getStyleProperty(item, styleContextStack, 'bold', false);
 			let italics = StyleContextStack.getStyleProperty(item, styleContextStack, 'italics', false);
@@ -116,7 +116,15 @@ class TextInlines {
 			if (!font) {
 				// No font set by item, style, or defaultStyle — auto-detect from text content
 				if (item.text && containsRTL(item.text)) {
-					font = 'Cairo';
+					// Check if text contains Hebrew characters - use Rubik font
+					let hasHebrew = false;
+					for (let i = 0; i < item.text.length; i++) {
+						if (isHebrewChar(item.text.charAt(i))) {
+							hasHebrew = true;
+							break;
+						}
+					}
+					font = hasHebrew ? 'Rubik' : 'Cairo';
 				} else {
 					font = 'Roboto';
 				}

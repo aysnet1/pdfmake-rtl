@@ -9,19 +9,19 @@
 
 <!-- [cndjs_url]: https://cdnjs.com/libraries/pdfmake-rtl -->
 
-**PDFMake RTL** is an enhanced version of [PDFMake](https://www.npmjs.com/package/pdfmake) with **automatic RTL (Right-to-Left) language support** for Arabic, Persian (Farsi), Urdu, and other RTL scripts. No manual configuration needed—just write your content and the library automatically detects and handles RTL text!
+**PDFMake RTL** is an enhanced version of [PDFMake](https://www.npmjs.com/package/pdfmake) with **automatic RTL (Right-to-Left) language support** for Arabic, Hebrew, Persian (Farsi), Urdu, and other RTL scripts. No manual configuration needed—just write your content and the library automatically detects and handles RTL text!
 
 All existing PDFMake code works unchanged, with automatic RTL support added!
 
 ## 🚀 Key Features
 
 - ✅ **Automatic RTL Detection** - No need to set `rtl` flags
-- ✅ **Smart Table Column Reversal** - Arabic/Persian/Urdu tables automatically reverse columns
-- ✅ **Unicode Script Detection** - Supports Arabic, Persian, Urdu, and extensions
-- ✅ **Automatic Font Selection** - Uses appropriate fonts per language
+- ✅ **Smart Table Column Reversal** - Arabic/Hebrew/Persian/Urdu tables automatically reverse columns
+- ✅ **Unicode Script Detection** - Supports Arabic, Hebrew, Persian, Urdu, and extensions
+- ✅ **Automatic Font Selection** - Uses Rubik for Hebrew, Cairo for Arabic/Persian/Urdu
 - ✅ **Proper Text Alignment** - RTL text aligns right, LTR text aligns left
 - ✅ **List Bullet Positioning** - Bullets positioned correctly for RTL lists
-- ✅ **Mixed Content Support** - Handles Arabic/Persian/Urdu/English mixed content
+- ✅ **Mixed Content Support** - Handles Arabic/Hebrew/Persian/Urdu/English mixed content
 - ✅ **100% PDFMake Compatible** - Drop-in replacement for PDFMake
 
 ## 🌐 Live Demo
@@ -40,19 +40,20 @@ For comprehensive guides, API references, and usage examples, visit the official
 
 #### 🔤 RTL Language Support
 
-- **Automatic RTL detection** for Arabic, Persian (Farsi), Urdu, and other RTL scripts
+- **Automatic RTL detection** for Arabic, Hebrew, Persian (Farsi), Urdu, and other RTL scripts
 - **Smart table column reversal** — columns automatically reverse for RTL content
-- **Automatic font selection** — uses Cairo font for Arabic, Persian, and Urdu text
+- **Automatic font selection** — uses Rubik for Hebrew, Cairo for Arabic/Persian/Urdu text
 - **Proper text alignment** — RTL text automatically aligns right, LTR aligns left
 - **List bullet positioning** — bullets and numbers positioned correctly for RTL lists
-- **Mixed content handling** — seamlessly handles Arabic/Persian/Urdu/English in the same document
-- **Unicode script detection** — supports Arabic, Persian, Urdu characters and extensions
+- **Mixed content handling** — seamlessly handles Arabic/Hebrew/Persian/Urdu/English in the same document
+- **Unicode script detection** — supports Arabic, Hebrew, Persian, Urdu characters and extensions
 
 #### 🗒️ Supported RTL Languages
 
 | Language          | Script  | Auto Font |
 | ----------------- | ------- | --------- |
 | Arabic            | العربية | Cairo     |
+| Hebrew            | עברית   | Rubik     |
 | Persian (Farsi)   | فارسی   | Cairo     |
 | Urdu              | اردو    | Cairo     |
 | Other RTL scripts | —       | Cairo     |

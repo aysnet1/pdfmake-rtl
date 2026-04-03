@@ -1,5 +1,5 @@
 /**
- * RTL (Right-to-Left) utilities for handling Arabic, Persian (Farsi), and Urdu languages
+ * RTL (Right-to-Left) utilities for handling Arabic, Hebrew, Persian (Farsi), and Urdu languages
  * Production-ready module for pdfmake RTL support
  */
 
@@ -38,8 +38,14 @@ const URDU_RANGE = [
 	[0x06D3, 0x06D3]  // Urdu Yeh Barree with Hamza
 ];
 
-// Strong RTL characters (Arabic, Persian, Urdu)
-const RTL_CHARS = /[\u0600-\u06FF\u0750-\u077F\u08A0-\u08FF\uFB50-\uFDFF\uFE70-\uFEFF\u200C-\u200D]/;
+// Unicode ranges for Hebrew characters
+const HEBREW_RANGE = [
+	[0x0590, 0x05FF], // Hebrew block
+	[0xFB1D, 0xFB4F]  // Hebrew Presentation Forms-A
+];
+
+// Strong RTL characters (Arabic, Hebrew, Persian, Urdu)
+const RTL_CHARS = /[\u0590-\u05FF\u0600-\u06FF\u0750-\u077F\u08A0-\u08FF\uFB1D-\uFDFF\uFE70-\uFEFF\u200C-\u200D]/;
 
 // Strong LTR characters (Latin, etc.)
 const LTR_CHARS = /[A-Za-z\u00C0-\u024F\u1E00-\u1EFF]/;
@@ -72,6 +78,16 @@ function isPersianChar(char) {
 function isUrduChar(char) {
 	const code = char.charCodeAt(0);
 	return URDU_RANGE.some(range => code >= range[0] && code <= range[1]) || isArabicChar(char);
+}
+
+/**
+ * Check if a character is in Hebrew script
+ * @param {string} char - Single character to check
+ * @returns {boolean} - True if character is Hebrew
+ */
+function isHebrewChar(char) {
+	const code = char.charCodeAt(0);
+	return HEBREW_RANGE.some(range => code >= range[0] && code <= range[1]);
 }
 
 /**
@@ -491,6 +507,7 @@ export {
 	isArabicChar,
 	isPersianChar,
 	isUrduChar,
+	isHebrewChar,
 	isRTLChar,
 	isLTRChar,
 	containsRTL,
